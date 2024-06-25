@@ -7,6 +7,15 @@ import Typography from '@mui/material/Typography'
 import { Link as ScrollLink } from 'react-scroll'
 import { StyledButton } from '@/components/styled-button'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
+import Button from '@mui/material/Button';
+import { styled } from '@mui/material/styles';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
+
 
 interface Exp {
   label: string
@@ -31,6 +40,15 @@ const exps: Array<Exp> = [
   },
 ]
 
+const BootstrapDialog = styled(Dialog)(({ theme }) => ({
+  '& .MuiDialogContent-root': {
+    padding: theme.spacing(2),
+  },
+  '& .MuiDialogActions-root': {
+    padding: theme.spacing(1),
+  },
+}));
+
 const ExpItem: FC<ExpItemProps> = ({ item }) => {
   const { value, label } = item
   return (
@@ -48,6 +66,16 @@ const ExpItem: FC<ExpItemProps> = ({ item }) => {
 }
 
 const HomeHero: FC = () => {
+
+  const [openVideo, setOpenVideo] = React.useState(false);
+
+  const handleClickOpen = () => {
+    setOpenVideo(true);
+  };
+  const handleVideoClose = () => {
+    setOpenVideo(false);
+  };
+
   return (
     <Box id="hero" sx={{ backgroundColor: 'background.paper', position: 'relative', pt: 4, pb: { xs: 8, md: 10 } }}>
       <Container maxWidth="lg">
@@ -149,7 +177,7 @@ const HomeHero: FC = () => {
                   </StyledButton>
                 </ScrollLink>
                 <ScrollLink to="video-section" spy={true} smooth={true} offset={0} duration={350}>
-                  <StyledButton color="primary" size="large" variant="outlined" startIcon={<PlayArrowIcon />}>
+                  <StyledButton onClick={handleClickOpen} color="primary" size="large" variant="outlined" startIcon={<PlayArrowIcon />}>
                     Watch Video
                   </StyledButton>
                 </ScrollLink>
@@ -217,6 +245,37 @@ const HomeHero: FC = () => {
             ))}
           </Grid>
         </Box>
+        <BootstrapDialog
+          onClose={handleVideoClose}
+          aria-labelledby="customized-dialog-title"
+          open={openVideo}
+        >
+          <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">
+            Introduction
+          </DialogTitle>
+          <IconButton
+            aria-label="close"
+            onClick={handleVideoClose}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+          <DialogContent dividers>
+            <Box>
+              <video src='/videos/video.mp4' controls autoPlay style={{ width: '100%', height: '100%' }}>Introduction video</video>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button autoFocus onClick={handleVideoClose}>
+              Close
+            </Button>
+          </DialogActions>
+        </BootstrapDialog>
       </Container>
     </Box>
   )
