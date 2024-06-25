@@ -2,6 +2,7 @@ import { Grid, Typography } from '@mui/material';
 import { Box } from '@mui/material';
 import { chatbots_items } from './chatbots-data';
 import ChatbotItemCard from '../../components/chatbot';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -63,7 +64,6 @@ export default function Home() {
               <Box
                 sx={{
                   paddingY: 2,
-                  paddingX: 5,
                   background: '#fff',
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -72,8 +72,11 @@ export default function Home() {
                   top: 0,
                   zIndex: 103
                 }}
+                paddingX={{ xs: 2, sx: 2, md: 5 }}
               >
-                <Typography className='custom_font'>TalentAssist</Typography>
+                <Link href="/" variant="body2" style={{ cursor: 'pointer' }}>
+                  <Typography className='custom_font' sx={{ cursor: 'pointer' }} fontSize={{ xs: 18, sx: 25, md: 30 }}>TalentAssist</Typography>
+                </Link>
                 <Box sx={{ width: '80%', display: 'flex', alignItems: 'center', justifyContent: 'end' }}>
                   <Typography sx={{ textAlign: 'center', mx: 4, borderRadius: 10, border: '2px solid #333', padding: 1 }}><span style={{ fontWeight: 'bolder' }}>2 / 99</span></Typography>
                   <Typography sx={{ fontWeight: 100, border: '2px solid #333', borderRadius: 10, padding: 1 }}>Free plan</Typography>
@@ -85,7 +88,7 @@ export default function Home() {
                 }}
                 padding={{ xs: 2, sx: 3, md: 10 }}
               >
-                <Box className='rotate_y' sx={{ color: '#fff', display: 'flex', width: 'max-content' }} fontSize={{ xs: 30, sx: 40, md: 60 }}>Chatbots</Box>
+                <Box className='rotate_y' sx={{ color: '#fff', display: 'flex', width: 'max-content' }} fontSize={{ xs: 30, sx: 40, md: 60 }}>Educational Chatbots</Box>
                 <Typography className='fade_up'>Which talentassist would you like?<br />Our innovative platform empowers you to effortlessly create guided notes from any YouTube video, regardless of its length. Utilizing advanced technology, we accurately summarize video content, enabling you to capture key information and insights in a condensed format. Take your learning to the next level with the option to generate custom questions based on the video, facilitating active engagement. Say goodbye to tedious note-taking and embrace the efficiency of video-based learning.</Typography>
               </Box>
               <Box sx={{ flexGrow: 1 }}>
