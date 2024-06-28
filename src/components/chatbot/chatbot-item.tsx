@@ -4,6 +4,7 @@ import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import { ChatbotItem } from "@/interfaces/chatbotItem";
+import { NextRouter, useRouter } from "next/router";
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -18,14 +19,24 @@ interface Props {
 }
 
 const ChatbotItemCard: FC<Props> = ({ payload }) => {
-    return (<Grid item xs={12} sm={6} md={6} lg={4}>
+    const router: NextRouter = useRouter()
+
+    const goToChatbot = () => {
+        const data: ChatbotItem = payload
+        router.push({
+            pathname: '/chatbot',
+            query: { id: data.title }
+        })
+    }
+
+    return (<Grid className="fade_up" item xs={12} sm={6} md={6} lg={4}>
         <Item sx={{
             padding: 2,
             minHeight: 213,
             background: 'transparent',
             color: '#fff',
             cursor: 'pointer'
-        }} className="chatbot_item_btn">
+        }} className="chatbot_item_btn" onClick={goToChatbot}>
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',
