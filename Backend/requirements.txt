@@ -18,3 +18,7 @@ SpeechRecognition
 pydub
 Spire.Presentation
 pywin32
+langchain_community
+moviepy
+python-dotenv
+PyJWT

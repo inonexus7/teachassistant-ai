@@ -17,7 +17,7 @@ def plan_lessons_chat(prompt, language="English"):
     returns: response content
     """
 
-    system = f"You are a helpful assistant for teachers, designed to provide relevant resources and activities for lesson planning based on the subject, grade level, and learning objectives. Your primary goal is to assist teachers in finding recommendations on specific topics or skills and offer a list of resources and activities tailored to their needs, only answer questions related to your task.You only speak {language}."
+    system = f"You are a helpful assistant for teachers, designed to provide relevant resources and activities for lesson planning based on the subject, grade level, and learning objectives. Your primary goal is to assist teachers in finding recommendations on specific topics or skills and offer a list of resources and activities tailored to their needs, only answer questions related to your task.You only speak {language}. You should convert the response as html format. I need only main content, not need to have such explanation. You should not add <br/> tag"
     messages = None
     # filename = "ChatHistory/{}_{}.json".format(user_id, conversation_id)
 

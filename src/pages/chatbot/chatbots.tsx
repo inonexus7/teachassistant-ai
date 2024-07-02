@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 import Link from 'next/link';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useRouter, NextRouter } from 'next/router';
-import { ChatbotItem } from '@/interfaces/chatbotItem';
+import { ChatbotItem } from '@/interfaces/chatbot';
 import { FC, useState } from 'react';
 import { Dashboard } from '@mui/icons-material';
 import { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
@@ -23,18 +23,28 @@ const BootstrapTooltip = styled(({ className, ...props }: TooltipProps) => (
   },
 }));
 
+interface ChatbotProps {
+  setAnswer: (message: string) => void;
+  clearAnswer: () => void;
+}
+
 const Chatbot: FC = () => {
   const [lang, setLang] = useState('')
+  const [text, setText] = useState('')
   const router: NextRouter = useRouter();
 
   console.log('searching...')
 
   const bot_id: any = router.query;
-  const Bot = data.find(item => item.id === bot_id.id)?.data as unknown as FC
+  const Bot = data.find(item => item.id === bot_id.id)?.data as unknown as FC<ChatbotProps>
 
-  const handleChange = (event: SelectChangeEvent) => {
-    setLang(event.target.value);
-  };
+  const clearAnswer = () => {
+    setText('')
+  }
+
+  const displayAnswer = (answer: string) => {
+    setText(text => text.concat(answer))
+  }
 
   return (
     <Grid container spacing={2}>
@@ -126,8 +136,10 @@ const Chatbot: FC = () => {
                 padding={{ xs: 2, sx: 3, md: 10 }}
               >
                 <Grid container>
-                  <Bot />
-                  <Grid item xs={12} sm={12} md={7} lg={8} style={{ background: '#fff', padding: 30 }} borderLeft={{ md: '1px solid #333' }}>Hi</Grid>
+                  <Bot setAnswer={displayAnswer} clearAnswer={clearAnswer} />
+                  <Grid item xs={12} sm={12} md={7} lg={8} style={{ background: '#fff', padding: 30 }} borderLeft={{ md: '1px solid #333' }}>
+                    <div dangerouslySetInnerHTML={{ __html: text }}></div>
+                  </Grid>
                 </Grid>
               </Box>
             </Box>

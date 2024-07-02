@@ -136,24 +136,14 @@ def evaluate_quiz(prompt, user_id, conversation_id, language="English"):
     #    json.dump(messages, outfile)
     #return message['content'].replace('\n','<br>' )
 
-def generate_quiz(math_problem, multiple, user_id, conversation_id, language, number):
+def generate_quiz(math_problem, multiple, language, number):
     """
     math_problem: math_problem by user
     user_id: user ID
     returns: Quiz
     """
-    openai.api_key = config.DevelopmentConfig.OPENAI_KEY
-    completion = openai.ChatCompletion()
-    model = "gpt-3.5-turbo"
+    
     system = f"You are a helpful assistant for teachers, designed to generate math quizzes based on a math problem. you only speak {language}. you only reply with the quiz, you do not add any notices or warnings"
-    messages = None
-    filename = "ChatHistory/{}_{}.json".format(user_id, conversation_id)
-
-    if not os.path.exists('ChatHistory'):
-        os.makedirs('ChatHistory')
-    if not os.path.exists('Quizzes'):
-        os.makedirs('Quizzes')
-    quizfilename = "Quizzes/{}_{}.txt".format(user_id, conversation_id)
 
     add_str = ""
     
@@ -163,14 +153,6 @@ def generate_quiz(math_problem, multiple, user_id, conversation_id, language, nu
         add_str = "the quiz questions should be multiple choice questions. Multiple choice questions should show only 3 options."
     elif multiple_str == "true/false and multiple choice":
         add_str = "the quiz questions should be a mix of both true/ false questions, and multiple choice questions. Multiple choice questions should show only 3 options."
-
-    try:
-        with open(filename, 'r') as openfile:
-            messages = json.load(openfile)
-    except:
-        messages = None
-        first_message = f"{math_problem}, chatbot name: math quiz generator"
-        create_chat_data(user_id, conversation_id, first_message)
 
     final_prompt = f"""Your role as a teacher's assistant is to create a math quiz based on a theme provided by the teacher. The quiz should only include math problems that can be converted into an expression compatible with calculators.
 For example, questions like "What is 37593 * 67?" or "What is 37593^(1/5)?" are acceptable. However, avoid complex questions such as simplifying an expression or solving an equation.
@@ -186,22 +168,9 @@ When the quiz type is true or false, you should generate true or false quiz.
 you only speak {language}
 The number of questions should be {number}
 """
-    followup_prompt = math_problem
 
-    if not messages:
-        messages = [
-            {"role": "system", "content": system},
-            {"role": "user", "content": final_prompt+ add_str + "start with Here is your quiz"}
-        ]
-    else:
-        messages.append({"role": "user", "content": followup_prompt})
-
-    return messages, filename
-    #response = completion.create(model=model, messages=messages)
-    #message = response['choices'][0]['message']
-    #messages.append(message)
-    #with open(filename, "w") as outfile:
-    #    json.dump(messages, outfile)
-    #with open(quizfilename, "w") as f:
-    #    f.write(message['content'])
-    #return message['content'].replace('\n','<br>' )
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": final_prompt+ add_str + "start with Here is your quiz"}
+    ]
+    return messages, "filename"

@@ -29,6 +29,7 @@ import json
 from getQuizFromFile import genQuizFromFile
 from flask_cors import CORS
 from lessonplannerapi import get_links
+import jwt
 
 def page_not_found(e):
   return render_template('404.html'), 404
@@ -42,6 +43,26 @@ app.register_error_handler(404, page_not_found)
 
 client = OpenAI(api_key=config.DevelopmentConfig.OPENAI_KEY)
 
+def authenticate(request):
+    # Retrieve the JWT token from the 'Authorization' header
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        # Typically the header will be in the format "Bearer token_here"
+        # So, you need to split by space to get the token part
+        try:
+            token = auth_header.split(' ')[1]
+            # Decode the token
+            # You need to provide the 'secret' key used to encode the JWT
+            # Ensure to catch exceptions that may occur during token decoding
+            payload = jwt.decode(token, config.DevelopmentConfig.JWT_SECRET, algorithms=["HS256"])
+            return payload
+        except jwt.ExpiredSignatureError:
+            return "Token has expired", 401
+        except (jwt.InvalidTokenError, Exception) as e:
+            return "Invalid token", 401
+    else:
+        return 'No Authorization Header Found', 401
+
 def send_messages(messages, model):
     return client.chat.completions.create(
         model=model,
@@ -50,33 +71,26 @@ def send_messages(messages, model):
     )
 
 def event_stream(messages, filename, reqLink=None):
-    full_message = []
     model = 'gpt-3.5-turbo'
     if reqLink is not None:
         model = 'gpt-4o'
     for line in send_messages(messages=messages, model=model):
         #print(line)
-        text = line.choices[0].delta.get('content', '')
-        if len(text): 
-            full_message.append(text)
+        text = line.choices[0].delta.content
+        if text is not None and len(text): 
             yield text
-    # if reqLink is not None:
-    #     yield reqLink
-    # str_message = ''.join(full_message)
-    # message = {"role": "assistant", "content": str_message}
-    # messages.append(message)
-    # with open(filename, "w") as outfile:
-    #     json.dump(messages, outfile)
     
 
-@app.route('/lessonplanner', methods = ['GET', 'POST'])
+@app.route('/chatbot/lessonplanner', methods = ['GET', 'POST'])
 def lessonplanner():
-    data = request.get_json()
+    # authenciate
+    # token = authenticate(request)
+    body = request.get_json()
 
-    print('Here is your Data: ', data)
+    print('Here is your Data: ', body)
 
-    data = data['prompt']
-    language = data['language']
+    data = body['prompt']
+    language = body['language']
     question = str(data)
 
     messages, filename, links = lessonplannerapi.plan_lessons_chat(question, language)
@@ -101,11 +115,9 @@ def lessonplannerChat():
     
     return Response(event_stream(messages, filename, links), mimetype='text/event-stream')
 
-@app.route('/quiz', methods = ['POST'])
+@app.route('/chatbot/quiz', methods = ['POST'])
 def quiz():
     data = request.get_json()
-    user_id = data['user_id']
-    conversation_id = data['conversation_id']
 
     print(data)
     data = data['prompt']
@@ -113,30 +125,28 @@ def quiz():
     grade = data['grade']
     quiz_topic = data['topic']
     subject = data['subject']
-    summary = data['summary']
-    quiz_type = data['type']
-    qn = data['questionnumber']
-    language = data['language']
+    summary = data['summaryLearningObjectives']
+    quiz_type = data['quizType']
+    qn = data['numberOfQuestions']
+    language = data['lang']
     user_input = f"Grade: {grade}, subject: {subject}, topic: {quiz_topic}, type: {quiz_type}, note: {summary}, number of questions: {qn}"
     res = {}
     #res['quiz'] = quizapi.generate_quiz(user_input, user_id, conversation_id, language)
     #return jsonify(res), 200
-    messages, filename = quizapi.generate_quiz(user_input, user_id, conversation_id, language)
+    messages, filename = quizapi.generate_quiz(user_input, language)
     return Response(event_stream(messages, filename), mimetype='text/event-stream')
 
-@app.route('/gradeEssay', methods = ['POST'])
+@app.route('/chatbot/gradeEssay', methods = ['POST'])
 def grade():
     data = request.get_json()
-    user_id = data['user_id']
-    conversation_id = data['conversation_id']
-    
+    print(data)
     data = data['prompt']
     if isinstance(data, str):
         data = json.loads(data)
             
-    language = data['language']
+    language = data['lang']
     user_input = data
-    messages, filename = grade_essay.grade(user_input, user_id, conversation_id, language)
+    messages, filename = grade_essay.grade(user_input, language)
     return Response(event_stream(messages, filename), mimetype='text/event-stream')
 
 @app.route('/gradeEssay/rubric', methods=['POST'])
@@ -190,18 +200,16 @@ def index():
     messages, filename = math_quiz.evaluate_quiz(user_input, user_id, conversation_id, language)
     return Response(event_stream(messages, filename), mimetype='text/event-stream')
 
-@app.route("/mathquiz/gen", methods=["POST"])
+@app.route("/chatbot/mathquiz/gen", methods=["POST"])
 def gen_quiz():
     data = request.get_json()
-    conversation_id = data['conversation_id']
-    user_id = data['user_id']
 
     data = data["prompt"]
-    language = data['language']
-    mathproblem = data["mathproblem"]
-    multiple = data["type"]
-    num = data["numberofquestions"]
-    messages, filename = math_quiz.generate_quiz(mathproblem, multiple, user_id, conversation_id, language, num)
+    language = data['lang']
+    mathproblem = data["problem"]
+    multiple = data["quizType"]
+    num = data["numberOfQuestions"]
+    messages, filename = math_quiz.generate_quiz(mathproblem, multiple, language, num)
     return Response(event_stream(messages, filename), mimetype='text/event-stream')
 
 @app.route("/mathquiz/answer", methods=["POST"])

@@ -38,27 +38,16 @@ And the language of your response should be {language}.
     #    json.dump(message, outfile)
     #return message['content'].replace('\n','<br>' )
 
-def grade(essay, user_id, conversation_id, language="English"):
+def grade(essay, language="English"):
     """
     essay: essay by user
     user_id: user ID
     returns: Quiz
     """
-    openai.api_key = config.DevelopmentConfig.OPENAI_KEY
-    completion = openai.ChatCompletion()
-    model = "gpt-3.5-turbo"
+    
     system = f"You are a helpful assistant for teachers tasked with grading student essays based on a provided marking rubric. And the language of your response should be {language}"
-    messages = None
-    filename = "ChatHistory/{}_{}.json".format(user_id, conversation_id)
-    cubricfile = "Cubrics/{}_{}.json".format(user_id, conversation_id)
 
-    if not os.path.exists('ChatHistory'):
-        os.makedirs('ChatHistory')
-    try:
-        with open(cubricfile, 'r') as openfile:
-            rubric = json.load(openfile)
-    except:
-        rubric = f"""
+    rubric = f"""
 Content (40 points)
 Exemplary (36-40 points): The essay demonstrates a thorough understanding of the topic. The arguments are clear, well-supported with relevant evidence, and directly related to the thesis. The essay shows original thinking and creativity.
 Proficient (31-35 points): The essay demonstrates a good understanding of the topic. The arguments are clear and mostly supported by evidence. There is a connection to the thesis.
@@ -80,13 +69,7 @@ Proficient (15-17 points): The essay has few grammatical, spelling, or punctuati
 Developing (10-14 points): The essay has several grammatical, spelling, or punctuation errors that distract from the content. There are several format errors.
 Beginning (0-9 points): The essay is full of grammatical, spelling, or punctuation errors that make the content difficult to understand. The format is incorrect.
 And the language of your response should be {language}"""
-    try:
-        with open(filename, 'r') as openfile:
-            messages = json.load(openfile)
-    except:
-        messages = None
-        first_message = f"{essay}, chatbot name: Grading essays"
-        create_chat_data(user_id, conversation_id, first_message)
+    
 
     first_prompt = f"""As a helpful assistant for teachers, You are tasked with grading student essays based on the provided marking rubric and giving feedback for improvement.
     Carefully evaluate each essay according to the rubric's criteria: {rubric}. answer with "ok" if you understand"""
@@ -104,17 +87,14 @@ And the language of your response should be {language}"""
     And the language of your response should be {language}
     """
 
-    if not messages:
-        messages = [
-            {"role": "system", "content": system},
-            {"role": "user", "content": first_prompt},
-            {"role": "assistant", "content": "ok"},
-            {"role": "user", "content": final_prompt}
-        ]
-    else:
-        messages.append({"role": "user", "content": final_prompt})
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": first_prompt},
+        {"role": "assistant", "content": "ok"},
+        {"role": "user", "content": final_prompt}
+    ]
 
-    return messages, filename
+    return messages, "filename"
     #response = completion.create(model=model, messages=messages)
     #message = response['choices'][0]['message']
     #messages.append(message)
