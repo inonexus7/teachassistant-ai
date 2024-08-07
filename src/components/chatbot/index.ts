@@ -1,9 +1,20 @@
-import { ChatbotInputPanel } from "@/interfaces/chatbotInputPanel";
+import { ChatbotInputPanel } from "@/interfaces/chatbot";
 import ChatbotItemCard from "./chatbot-item";
 import LessonPlan from "./lessonplan";
 import QUIZ from "./quiz";
 import Essay from "./essay";
 import MathQuiz from "./mathquiz";
+import MathLesson from "./mathlesson";
+import VideoNote from "./videonote";
+import VideoQuiz from "./videoquiz";
+import AIWritingDetect from "./aiwritingdetect";
+import Presentation from "./presentation";
+import Report from "./report";
+import ESL from "./ESL";
+import HomeworkAssignment from "./homework";
+import TestCreator from "./testcreator";
+import Icebreaker from "./icebreaker";
+import DocBot from "./docbot";
 
 export const data: ChatbotInputPanel[] = [
     {
@@ -23,53 +34,49 @@ export const data: ChatbotInputPanel[] = [
         data: MathQuiz
     },
     {
-        id: '',
-        data: LessonPlan
+        id: 'Math Lesson Planner',
+        data: MathLesson
     },
     {
-        id: 'General Quiz',
-        data: QUIZ
+        id: 'Video to notes',
+        data: VideoNote
     },
     {
-        id: '',
-        data: LessonPlan
+        id: 'Video to Quiz',
+        data: VideoQuiz
     },
     {
-        id: 'General Quiz',
-        data: QUIZ
+        id: 'Detect AI-Writing & Plagiarism',
+        data: AIWritingDetect
     },
     {
-        id: '',
-        data: LessonPlan
+        id: 'PowerPoint Presentation',
+        data: Presentation
     },
     {
-        id: 'General Quiz',
-        data: QUIZ
+        id: 'Reports Generator',
+        data: Report
     },
     {
-        id: '',
-        data: LessonPlan
+        id: 'ESL Activity Suggestion',
+        data: ESL
     },
     {
-        id: 'General Quiz',
-        data: QUIZ
+        id: 'Homework Assignment Creator',
+        data: HomeworkAssignment
     },
     {
-        id: '',
-        data: LessonPlan
+        id: 'Test Creator',
+        data: TestCreator
     },
     {
-        id: 'General Quiz',
-        data: QUIZ
+        id: 'Classroom Icebreaker Ideas',
+        data: Icebreaker
     },
     {
-        id: '',
-        data: LessonPlan
-    },
-    {
-        id: 'General Quiz',
-        data: QUIZ
-    },
+        id: "Document & Web Link Quiz",
+        data: DocBot
+    }
 ]
 
 export default ChatbotItemCard

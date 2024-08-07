@@ -166,7 +166,7 @@ const HomeHero: FC = () => {
               <Box sx={{ mb: 4, width: { xs: '100%', md: '70%' } }}>
                 <Typography sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
                   {
-                    "Let's take the talent assist to improve your skills in a different way, you can set your own study time according to your learning speed. It provides you the services 24/7. Have a great day!"
+                    "Let's take the teach assist to improve your skills in a different way, you can set your own study time according to your learning speed. It provides you the services 24/7. Have a great day!"
                   }
                 </Typography>
               </Box>

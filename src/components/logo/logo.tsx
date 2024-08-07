@@ -14,7 +14,7 @@ const Logo: FC<Props> = ({ onClick, variant }) => {
         component="h1"
         sx={{ fontWeight: 700, '& span': { color: variant === 'primary' ? 'primary.main' : 'unset' } }}
       >
-        Talent<span>Assist</span>
+        Teach<span>Assist</span>
       </Typography>
     </Box>
   )

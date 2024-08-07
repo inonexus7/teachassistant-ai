@@ -1,4 +1,4 @@
-import { ChatbotItem } from "@/interfaces/chatbotItem"
+import { ChatbotItem } from "@/interfaces/chatbot"
 
 export const chatbots_items: Array<ChatbotItem> = [
     {

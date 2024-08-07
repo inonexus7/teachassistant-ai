@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-import openai
+from openai import OpenAI
 import config
 import json
 import os
 import datetime
 
-openai.api_key = config.DevelopmentConfig.OPENAI_KEY
+api_key = config.DevelopmentConfig.OPENAI_KEY
+client = OpenAI(api_key=api_key)
 
 def openhistory(filename):
     try:
@@ -20,7 +21,7 @@ def savehistory(filename, messages):
         json.dump(messages, outfile)
 
 def aicomplete(prompt, system='none', maxtokens='none', filename='dontsave'):
-    completion = openai.ChatCompletion()
+    completion = client.chat.completions
     model = "gpt-4-1106-preview"
     if system == 'none':
         system = "you are a helpfull assistant"

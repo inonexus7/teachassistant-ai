@@ -8,8 +8,7 @@ import grade_essay
 import ytgpt
 import aipresentation
 import lesson_comp
-from detect_ai import detect_ai
-from plag_cheker import get_plag_report
+from detect_ai import detect_ai, check_plag
 from gptutils import get_title
 import json
 from openai import OpenAI
@@ -30,6 +29,8 @@ from getQuizFromFile import genQuizFromFile
 from flask_cors import CORS
 from lessonplannerapi import get_links
 import jwt
+import time
+from pymongo import MongoClient
 
 def page_not_found(e):
   return render_template('404.html'), 404
@@ -42,6 +43,10 @@ app.config.from_object(config.config['development'])
 app.register_error_handler(404, page_not_found)
 
 client = OpenAI(api_key=config.DevelopmentConfig.OPENAI_KEY)
+
+# connect to mongodb
+client = MongoClient(host="mongodb://127.0.0.1", port=27017)
+db = client['assistman']
 
 def authenticate(request):
     # Retrieve the JWT token from the 'Authorization' header
@@ -149,56 +154,56 @@ def grade():
     messages, filename = grade_essay.grade(user_input, language)
     return Response(event_stream(messages, filename), mimetype='text/event-stream')
 
-@app.route('/gradeEssay/rubric', methods=['POST'])
-def rubric():
-    data = request.get_json()
-    essay_question = data["essay_question"]
-    user_id = data['user_id']
-    conversation_id = data['conversation_id']
-    grade = data["grade"]
-    language = data['language']
-    essay_question = essay_question + "for grade:" + grade
-    messages, filename = grade_essay.generate_rubric(essay_question, user_id, conversation_id, language)
-    return Response(event_stream(messages, filename), mimetype='text/event-stream')
+# @app.route('/gradeEssay/rubric', methods=['POST'])
+# def rubric():
+#     data = request.get_json()
+#     essay_question = data["essay_question"]
+#     user_id = data['user_id']
+#     conversation_id = data['conversation_id']
+#     grade = data["grade"]
+#     language = data['language']
+#     essay_question = essay_question + "for grade:" + grade
+#     messages, filename = grade_essay.generate_rubric(essay_question, user_id, conversation_id, language)
+#     return Response(event_stream(messages, filename), mimetype='text/event-stream')
 
-@app.route('/lessonComp/chat', methods = ['POST'])
-def gen_questions_chat():
-    """for generating more questions for the write_up with the chat"""
-    data = request.get_json()
-    user_id = data['user_id']
-    conversation_id = data['conversation_id']
+# @app.route('/lessonComp/chat', methods = ['POST'])
+# def gen_questions_chat():
+#     """for generating more questions for the write_up with the chat"""
+#     data = request.get_json()
+#     user_id = data['user_id']
+#     conversation_id = data['conversation_id']
 
-    data = data['prompt']
-    content = data['content']
-    user_input = data
-    language = data['language']
-    messages, filename = lesson_comp.generate_questions(prompt=user_input, user_id=user_id, conversation_id=conversation_id, language=language, content=content)
-    return Response(event_stream(messages, filename, True), mimetype='text/event-stream')
+#     data = data['prompt']
+#     content = data['content']
+#     user_input = data
+#     language = data['language']
+#     messages, filename = lesson_comp.generate_questions(prompt=user_input, user_id=user_id, conversation_id=conversation_id, language=language, content=content)
+#     return Response(event_stream(messages, filename, True), mimetype='text/event-stream')
 
-@app.route("/lessonComp/questions", methods=['POST'])
-def gen_questions():
-    data = request.get_json()
-    user_id = data['user_id']
-    conversation_id = data['conversation_id']
+# @app.route("/lessonComp/questions", methods=['POST'])
+# def gen_questions():
+#     data = request.get_json()
+#     user_id = data['user_id']
+#     conversation_id = data['conversation_id']
 
-    data = data['prompt']
-    writeup = data["writeup"]
-    qtype = data["qtype"]
-    qnumber = data["qnumber"]
-    language = data['language']
-    notes = f"Question type: {qtype}, Number of questions: {qnumber}"
-    messages, filename = lesson_comp.generate_questions(writeup, user_id, conversation_id, notes, language)
-    return Response(event_stream(messages, filename), mimetype='text/event-stream')
+#     data = data['prompt']
+#     writeup = data["writeup"]
+#     qtype = data["qtype"]
+#     qnumber = data["qnumber"]
+#     language = data['language']
+#     notes = f"Question type: {qtype}, Number of questions: {qnumber}"
+#     messages, filename = lesson_comp.generate_questions(writeup, user_id, conversation_id, notes, language)
+#     return Response(event_stream(messages, filename), mimetype='text/event-stream')
 
-@app.route('/mathquiz/evaluate', methods = ['POST'])
-def index():
-    data = request.get_json()
-    user_id = data['user_id']
-    conversation_id = data['conversation_id']
-    user_input = data["prompt"]
-    language = data['language']
-    messages, filename = math_quiz.evaluate_quiz(user_input, user_id, conversation_id, language)
-    return Response(event_stream(messages, filename), mimetype='text/event-stream')
+# @app.route('/mathquiz/evaluate', methods = ['POST'])
+# def index():
+#     data = request.get_json()
+#     user_id = data['user_id']
+#     conversation_id = data['conversation_id']
+#     user_input = data["prompt"]
+#     language = data['language']
+#     messages, filename = math_quiz.evaluate_quiz(user_input, user_id, conversation_id, language)
+#     return Response(event_stream(messages, filename), mimetype='text/event-stream')
 
 @app.route("/chatbot/mathquiz/gen", methods=["POST"])
 def gen_quiz():
@@ -222,154 +227,113 @@ def answers():
     messages, filename = math_quiz.reveal_answers(user_id, conversation_id, language)
     return Response(event_stream(messages, filename), mimetype='text/event-stream')
 
-@app.route('/math/lesson', methods = ['POST'])
+@app.route('/chatbot/math/lesson', methods = ['POST'])
 def lesson():
     data = request.get_json()
-    user_id = data['user_id']
-    conversation_id = data['conversation_id']
 
     print(data)
     data = data['prompt']
     question = data
-    language = data['language']
+    language = data['lang']
 
-    messages, filename, links = math_lesson.plan_lessons_chat(question, user_id, conversation_id, language)
+    messages, filename, links = math_lesson.plan_lessons_chat(question, language)
     return Response(event_stream(messages, filename, links), mimetype='text/event-stream')
 
-@app.route('/video/summarize', methods = ['POST'])
+@app.route('/chatbot/video/summarize', methods = ['POST'])
 def summarizevid():
     data = request.get_json()
     print('Recieved Data: ', data)
-    user_id = data['user_id']
-    conversation_id = data['conversation_id']
-
     data = data['prompt']
-    url =  data['url']
-    userinput = data['userinput']
-    language = data['language']
-    messages, filename = ytgpt.summarize(url, user_id, conversation_id, userinput, language)
+    url =  data['videoUrl']
+    language = data['lang']
+    messages, filename = ytgpt.summarize(url, language)
     return Response(event_stream(messages, filename), mimetype='text/event-stream')
 
-@app.route('/video/quiz', methods = ['POST'])
+@app.route('/chatbot/video/quiz', methods = ['POST'])
 def videoquiz():
     data = request.get_json()
     print('Recieved Data: ', data)
-    user_id = data['user_id']
-    conversation_id = data['conversation_id']
     
     data = data['prompt']
-    vidUrl =  data['url']
-    num_questions =  data['num_question']
-    quiz_type =  data['quiz_type']
-    # userinput = data['userinput']
-    language = data['language']
+    vidUrl =  data['videoUrl']
+    num_questions =  data['numberOfQuestions']
+    quiz_type =  data['quizType']
+    language = data['lang']
 
-    messages, filename = ytgpt.get_quiz(vidUrl, user_id, conversation_id, num_questions, quiz_type, language)
+    messages, filename = ytgpt.get_quiz(vidUrl, num_questions, quiz_type, language)
     return Response(event_stream(messages, filename, True), mimetype='text/event-stream')
 
-@app.route('/video/chat', methods = ['POST'])
-def videochat():
-    data = request.get_json()
-    print('Recieved Data: ', data)
-    user_id = data['user_id']   
-    data = data['prompt']
-    vidUrl =  data['url']
-    language = data['language']
-    #conversation_id = data['conversation_id']
-    prompt = data['videoChatPrompt']
-    messages, filename =  ytgpt.chatyoutube(vidUrl, user_id, prompt, language)
-    return Response(event_stream(messages, filename, True), mimetype='text/event-stream')
-
-@app.route('/detectai', methods = ['POST'])
+@app.route('/chatbot/detectai', methods = ['POST'])
 def aidetect():
   data = request.get_json()
-  print('Recieved Data: ', data)
-  data = data['prompt']
-  text = data['text']
+#   print('Recieved Data: ', data)
+  data = data['body']
+  text = data['content']
   res = {}
-  res['result'] = detect_ai(text)
+  res['answer'] = detect_ai(text)
+  print(res)
   return jsonify(res), 200
 
-@app.route('/checkplag', methods = ['POST'])
+@app.route('/chatbot/plagirism', methods = ['POST'])
 def plagiarism():
   data = request.get_json()
-  print('Recieved Data: ', data)
-  data = data['prompt']
-  text = data['text']
+#   print('Recieved Data: ', data)
+  data = data['body']
+  text = data['content']
 
   res = {}
-  res['report'] = get_plag_report(text)
+  res['answer'] = check_plag(text)
+  print(res)
   return jsonify(res), 200
 
-@app.route('/powerpoint', methods = ['POST'])
+@app.route('/chatbot/powerpoint', methods = ['POST'])
 def powerpoint():
     data = request.get_json()
-    print('Recieved Data: ', data)
-    user_id =  data['user_id']
 
     description = data['prompt']['description']
     presenter = data['prompt']['presenter']
-    title = data['prompt']['title']
-    number_of_slides = data['prompt']['number_of_slides']
+    title = data['prompt']['title'].upper()
+    number_of_slides = int(data['prompt']['number_of_slides'])
     insert_image = data['prompt']['insert_image']
     isImage = True
-    language = data['prompt']['language']
+    language = data['prompt']['lang']
     
     res = {}
-    file_path = aipresentation.get_presentation(description, user_id, title, presenter, number_of_slides, insert_image, isImage, language)
-    res['presentation_link'] = f"http://localhost:4000/{file_path}"
+    file_path = aipresentation.get_presentation(description, title, presenter, number_of_slides, insert_image, isImage, language)
+    res['presentation_link'] = f"{file_path}"
     return jsonify(res), 200
 
 @app.route('/GeneratedPresentations/<path:path>')
 def send_generated_image(path):
-    return send_file(f'GeneratedPresentations/{path}', as_attachment=True)
+    return send_file(f'GeneratedPresentations/{path}.pptx', as_attachment=True)
 
-@app.route('/chattitles', methods = ['POST'])
-def title():
-    data = request.get_json()
-    print('Recieved Data: ', data)
-    user_id = data['user_id']
-    conversation_id = data['conversation_id']
-    res = {}
-    res['title'] = get_title(user_id, conversation_id)
-    return jsonify(res), 200
-
-@app.route('/report/answer', methods=['POST'])
+@app.route('/chatbot/report/answer', methods=['POST'])
 def generateReport():
     body = request.get_json()
-    print(body['prompt'])
-    user_id = body['user_id']
-    conversation_id = body['conversation_id']
     try:
-        response = Response(genReport(body['prompt'], user_id, conversation_id), mimetype='text/event-stream')
+        response = Response(event_stream(genReport(body['prompt']), "filename"), mimetype='text/event-stream')
         response.headers.add('Access-Control-Allow-Origin', '*')
     except Exception as ex:
         print("Can't bring data from openai server!")
         return 'Sorry. please ask me again after one minutes'
     return response
 
-@app.route('/esl/answer', methods=['POST'])
+@app.route('/chatbot/esl/answer', methods=['POST'])
 def generateESL():
     body = request.get_json()
-    print(body['prompt'])
-    user_id = body['user_id']
-    conversation_id = body['conversation_id']
     try:
-        response = Response(genESLActivity(body['prompt'], user_id, conversation_id), mimetype='text/event-stream')
+        response = Response(event_stream(genESLActivity(body['prompt']), filename="filename"), mimetype='text/event-stream')
         response.headers.add('Access-Control-Allow-Origin', '*')
     except Exception as ex:
         print("Can't bring data from openai server!")
         return 'Sorry. please ask me again after one minutes'
     return response
 
-@app.route('/docurl/quiz', methods=['POST'])
+@app.route('/chatbot/docurl/quiz', methods=['POST'])
 def generateGenQuizFromFile():
     # Check if the 'file' key is in the request.files dictionary
     body = request.get_json()
-    user_id = body['user_id']
-    conversation_id = body['conversation_id']
-    print('user_id: ', user_id, '        conversation_id: ', conversation_id)
-    data = body['payload']
+    data = body['prompt']
     text = ''
     if 'url' in data:
         url = data['url']
@@ -379,7 +343,7 @@ def generateGenQuizFromFile():
         options.add_argument('--disable-dev-shm-usage')
         driver = webdriver.Chrome(options=options)
         driver.get(url) #https://app.intotheblock.com/category/all?end_offset=20
-        driver.implicitly_wait(20)
+        time.sleep(3)
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         text = soup.get_text()
         # browser = mechanicalsoup.StatefulBrowser()
@@ -391,33 +355,14 @@ def generateGenQuizFromFile():
         if len(tokens) > 4000:
             text = " ".join(tokens[: 4000])
     else:
-        if 'filename' not in body:
-            body = request.get_json()
-            data = body['payload']
-            text = data['text']
-        else:
-            uploaded_file = body['filename']
-            body = request.get_json()
-            data = body['payload']
-            if uploaded_file:
-                if uploaded_file.endswith(".docx"):
-                    doc = Document(uploaded_file)
-                    for paragraph in doc.paragraphs:
-                        text = text + paragraph.text
-                elif uploaded_file.endswith(".pptx"):
-                    presentation = Presentation(uploaded_file)
-                    # Process the PowerPoint presentation
-                    for slide in presentation.slides:
-                        for shape in slide.shapes:
-                            if hasattr(shape, "text"):
-                                text += shape.text
+        text = data['text']
         if len(text) > 90000:
             return jsonify({'msg': 'error!'}), 404
     try:
-        response = Response(genQuizFromFile(data, text, user_id, conversation_id), mimetype='text/event-stream')
+        response = Response(event_stream(genQuizFromFile(data, text), "filename"), mimetype='text/event-stream')
         response.headers.add('Access-Control-Allow-Origin', '*')
     except Exception as ex:
-        print("Can't bring data from openai server!")
+        print("Can't bring data from openai server!", ex)
         return 'Sorry. please ask me again after one minutes'
     return response
 
@@ -458,46 +403,94 @@ def translateWithGoogle():
     print('lang to: ', lang)
     return jsonify({'text': result})
 
-@app.route('/homework/creator', methods=['POST'])
+@app.route('/chatbot/homework/creator', methods=['POST'])
 def createHomework():
     body = request.get_json()
-    print(body['prompt'])
-    user_id = body['user_id']
-    conversation_id = body['conversation_id']
     try:
-        response = Response(creHomework(body['prompt'], user_id, conversation_id), mimetype='text/event-stream')
+        response = Response(event_stream(creHomework(body['prompt']), "filename"), mimetype='text/event-stream')
         response.headers.add('Access-Control-Allow-Origin', '*')
     except Exception as ex:
         print("Can't bring data from openai server!")
         return 'Sorry. please ask me again after one minutes'
     return response
 
-@app.route('/test/creator', methods=['POST'])
+@app.route('/chatbot/test/creator', methods=['POST'])
 def creTest():
     body = request.get_json()
-    print(body['prompt'])
-    user_id = body['user_id']
-    conversation_id = body['conversation_id']
     try:
-        response = Response(createTest(body['prompt'], user_id, conversation_id), mimetype='text/event-stream')
+        response = Response(event_stream(createTest(body['prompt']), "filename"), mimetype='text/event-stream')
         response.headers.add('Access-Control-Allow-Origin', '*')
     except Exception as ex:
         print("Can't bring data from openai server!")
         return 'Sorry. please ask me again after one minutes'
     return response
 
-@app.route('/icebreaker/ideas', methods=['POST'])
+@app.route('/chatbot/icebreaker/ideas', methods=['POST'])
 def icebreakerIdeas():
     body = request.get_json()
-    user_id = body['user_id']
-    conversation_id = body['conversation_id']
     try:
-        response = Response(icebreaker_Ideas(body['prompt'], user_id, conversation_id), mimetype='text/event-stream')
+        response = Response(event_stream(icebreaker_Ideas(body['prompt']), "filename"), mimetype='text/event-stream')
         response.headers.add('Access-Control-Allow-Origin', '*')
     except Exception as ex:
         print("Can't bring data from openai server!")
         return 'Sorry. please ask me again after one minutes'
     return response
+
+@app.route('/api/v1/auth/login', methods=['POST'])
+def signinUser():
+    body = request.get_json()
+    try:
+        email = body['email']
+        password = body['password']
+        user_collection = db['users']
+        person = user_collection.find_one({ 'email': email, 'password': password })
+
+        if person:
+            payload = {
+                'name': person['fullname'],
+                'email': person['email']
+            }
+            token = jwt.encode(payload, config.DevelopmentConfig.JWT_SECRET, algorithm='HS256')
+            print("Token: ", token)
+
+            result = {
+                'token': token,
+                'user': payload
+            }
+
+            return jsonify({ 'result': result }), 200
+        else:
+            return jsonify({ 'msg': 'there is no such person' }), 424
+    except Exception as ex:
+        print("Raised an error!")
+        return Response("Server Error!", status=500)
+
+@app.route('/api/v1/auth/register', methods=['POST'])
+def signupUser():
+    try:
+        body = request.get_json()
+        name = body['name']
+        email = body['email']
+        password = body['password']
+        addr = body['addr']
+        phone = body['phone']
+        
+        # checking the new user and insert one.
+        user_collection = db['users']
+        print(email)
+        person = user_collection.find_one({ "email": email})
+
+        if person is not None:
+            print("The user who has the email already exists.")
+            return Response("Already exist!", status=404)
+        else:
+            # return jsonify({'result', 'result'})
+            result = user_collection.insert_one({'fullname': name, 'email': email, 'password': password, 'addr': addr, 'phone': phone})
+            return jsonify({ "result": "inserted" }), 200
+    except Exception as ex:
+        print("Unknown error!")
+        print(ex)
+        return Response("Server error!", status=500)
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port='5000')

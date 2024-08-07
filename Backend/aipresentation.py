@@ -11,6 +11,11 @@ from spire.presentation import Presentation as pres, FileFormat
 from spire.presentation.common import *
 from urllib.parse import quote_plus
 from text_pp import *
+from openai import OpenAI
+import config
+
+api_key = config.DevelopmentConfig.OPENAI_KEY
+client = OpenAI(api_key=api_key)
 
 system_prompt = """You are an assistant that gives the idea for PowerPoint presentations. When answering, give the user the summarized content for each slide based on the number of slide.
                     And the format of the answer must be Slide X(the number of the slide): {title of the content} \n Content: \n content with some bullet points.
@@ -23,12 +28,20 @@ if not os.path.exists("Cache"):
 
 
 def create_ppt_text(title, description, number_of_slides, language):
-    if int(number_of_slides) > 20:
+    if number_of_slides > 20:
         number_of_slides = 20
     user_message = f"I want you to come up with the idea for the PowerPoint. The number of slides is {number_of_slides}, Remeber it is important to generate {number_of_slides} of slides. " \
                        f"The title of content for each slide must be unique," \
                        f"Provide one example about title of each slide, the example should have 3 sentences  with at most 100 words for each paragraph the most important aspects of following topic: {description} for each slide. All content should be written by an language - {language}"
-    response = aicomplete(user_message, system_prompt).replace("<br>", "\n")
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_message}
+    ]
+    result = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=messages
+    )
+    response = result.choices[0].message.content
     return response
 
 
@@ -44,7 +57,7 @@ def get_image_urls(query, num_results=5):
 
     return image_urls
 
-def create_pptx_func(text_file, userid, presentation_title, presenter_name, insert_image, isImage, numSlides, language):
+def create_pptx_func(text_file, presentation_title, presenter_name, insert_image, isImage, numSlides, language):
     # prs = Presentation(f"Designs/Design-3.pptx")
     slide_count = 0
     header = ""
@@ -143,7 +156,7 @@ def create_pptx_func(text_file, userid, presentation_title, presenter_name, inse
 
 
 def get_presentation(
-    description, user_id, title, presenter, number_of_slides, insert_image, isImage, language="English"
+    description, title, presenter, number_of_slides, insert_image, isImage, language="English"
 ):
     # if "," in description:
     #     l1=[_.strip() for _ in description.split(",")]
@@ -164,7 +177,7 @@ def get_presentation(
             )
         )
     file_path = create_pptx_func(
-        f"Cache/{description_string}.txt", user_id, title, presenter, insert_image, isImage, number_of_slides, language
+        f"Cache/{description_string}.txt", title, presenter, insert_image, isImage, number_of_slides, language
     )
     print(file_path)
     return str(file_path)

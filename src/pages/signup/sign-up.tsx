@@ -12,6 +12,9 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { AuthContextType } from '@/interfaces/user';
+import { useAuthContext } from '@/contexts/auth-context';
+import { useRouter } from 'next/router';
 
 function Copyright(props: any) {
     return (
@@ -30,13 +33,39 @@ function Copyright(props: any) {
 const defaultTheme = createTheme();
 
 export default function SignUp() {
+    const router = useRouter();
+    const auth = useAuthContext();
+
+    if (!auth) {
+        // process the context if the auth is null;
+        throw new Error("Occured error to get context")
+    }
+
+    const { signUp } = auth;
+
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
         console.log({
             email: data.get('email'),
             password: data.get('password'),
+            fullname: `${data.get('firstName')} ${data.get('lastName')}`,
+            addr: data.get('addr'),
+            phone: data.get('phone')
         });
+
+        const email: string = data != null ? data.get('email') as string : ''
+        const password: string = data != null ? data.get('password') as string : ''
+        const fullname: string = data != null ? `${data.get('firstName')} ${data.get('lastName')}` as string : ''
+        const addr: string = data != null ? data.get('addr') as string : ''
+        const phone: string = data != null ? data.get('phone') as string : ''
+
+        try {
+            signUp(email, fullname, password, addr, phone)
+            router.push("/signin")
+        } catch (err) {
+            console.log(err)
+        }
     };
 
     return (
@@ -116,6 +145,28 @@ export default function SignUp() {
                                         type="password"
                                         id="password"
                                         autoComplete="new-password"
+                                        variant='standard'
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        name="addr"
+                                        label="Address"
+                                        type="text"
+                                        id="addr"
+                                        autoComplete="addr"
+                                        variant='standard'
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        name="phone"
+                                        label="Phone"
+                                        type="tel"
+                                        id="phone"
+                                        autoComplete="phone"
                                         variant='standard'
                                     />
                                 </Grid>

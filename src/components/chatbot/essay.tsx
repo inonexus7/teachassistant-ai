@@ -14,6 +14,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip'
+import { serverUrl } from "@/config/development";
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -27,8 +28,8 @@ const VisuallyHiddenInput = styled('input')({
     width: 1,
 });
 
-const pdfjsLib = require('pdfjs-dist/webpack');
-const Tesseract = require('tesseract.js');
+const pdfjsLib: any = require('pdfjs-dist/webpack');
+const Tesseract: any = require('tesseract.js');
 
 function convertPdfToImagesAndReadText(file: File) {
     return new Promise((resolve, reject) => {
@@ -262,7 +263,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
     const handleSubmit = async (e: any) => {
 
-        console.log(data)
+        clearAnswer()
         let fileMB = 0
         if (selectedFile) {
             fileMB = selectedFile.size / 1024 / 1024
@@ -275,7 +276,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
         try {
             // /chatbot/gradeEssay
 
-            const response: any = await fetch(`http://localhost:5000/chatbot/gradeEssay`, {
+            const response: any = await fetch(`${serverUrl}/chatbot/gradeEssay`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -392,7 +393,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
             <Typography>{bot.text}</Typography>
         </Box>
         <Box sx={{ marginY: 2 }}>
-            <TextField fullWidth label="Grade Level" type="number" variant='standard' name="grade" onChange={handleChange} />
+            <TextField fullWidth label="Grade Level" type="number" variant='standard' name="grade" onChange={handleChange} defaultValue={1} />
         </Box>
         <Box sx={{ marginY: 2 }}>
             <TextField fullWidth label="Question" variant='standard' name="question" onChange={handleChange} />
@@ -441,6 +442,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                     id="demo-simple-select-standard"
                     onChange={handleChange}
                     label="lang"
+                    name="lang"
                     defaultValue={`en`}
                 >
                     <MenuItem value={`en`}>English</MenuItem>

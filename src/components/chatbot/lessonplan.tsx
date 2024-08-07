@@ -8,6 +8,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { ChatbotItem, ChatbotProps } from "@/interfaces/chatbot";
+import { serverUrl } from "@/config/development";
 
 const LessonPlan: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
     const [data, setData] = useState({ lang: "English", grade: 1 })
@@ -36,7 +37,7 @@ const LessonPlan: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
         } else {
             clearAnswer()
             try {
-                const response: any = await fetch(`http://localhost:5000/chatbot/lessonplanner`, {
+                const response: any = await fetch(`${serverUrl}/chatbot/lessonplanner`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -165,7 +166,7 @@ const LessonPlan: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
             <TextField fullWidth label="Topic" variant='standard' name="topic" onChange={handleChange} />
         </Box>
         <Box sx={{ marginY: 2 }}>
-            <TextField fullWidth label="Grade Level" type="number" variant='standard' name="grade" onChange={handleChange} />
+            <TextField fullWidth label="Grade Level" type="number" variant='standard' name="grade" onChange={handleChange} defaultValue={1} />
         </Box>
         <Box sx={{ marginY: 2 }}>
             <TextField fullWidth label="Lesson Duration" variant='standard' name="duration" onChange={handleChange} />

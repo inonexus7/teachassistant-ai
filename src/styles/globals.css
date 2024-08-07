@@ -79,6 +79,32 @@ body {
   animation-iteration-count: 1;
 }
 
+.plan_item {
+  position: relative;
+  color: #394063;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 200ms ease-out;
+}
+
+.plan_item:hover {
+  /* background-color: orange; */
+  color: #000;
+  box-shadow: 0 4px 9px 4px rgba(0, 0, 0, 0.4),
+    0 8px 12px 14px rgba(0, 0, 0, 0.06);
+  transform: translateY(-15px);
+}
+
+.currentPlan {
+  position: absolute;
+  top: -80px;
+  left: -120px;
+  background-color: blue;
+  height: 20px;
+  width: 500px;
+  transform: rotate(-45deg);
+}
+
 @-webkit-keyframes click_animation {
   from {
     -webkit-transform: scale(1);

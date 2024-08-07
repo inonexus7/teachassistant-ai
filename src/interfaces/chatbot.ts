@@ -2,7 +2,7 @@ import React, { FC } from "react"
 
 export interface ChatbotInputPanel {
     id: string;
-    data: FC;
+    data: FC<ChatbotProps> | FC<AIWritingDetectChatbotProps>;
 }
 
 export interface ChatbotProps {
@@ -17,4 +17,14 @@ export interface ChatbotItem {
     admin: string
     text: string
     category: string
+}
+
+export interface AIWritingDetectChatbotProps {
+    clearAnswer: () => void;
+    setDetect: (v: boolean) => void;
+    setPlag: (v: boolean) => void;
+    setDetectAnswer: (v: any) => void;
+    setPlagAnswer: (v: any) => void;
+    detect: boolean;
+    plag: boolean;
 }

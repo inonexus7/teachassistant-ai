@@ -1,16 +1,15 @@
-import { Button, Grid, IconButton, TextField, Tooltip, Typography } from '@mui/material';
+import { Grid, IconButton, Tooltip, Typography } from '@mui/material';
 import { Box } from '@mui/material';
 // import ChatbotItemCard from '../../components/chatbot';
 import Link from 'next/link';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useRouter, NextRouter } from 'next/router';
-import { ChatbotItem } from '@/interfaces/chatbot';
+import { AIWritingDetectChatbotProps, ChatbotProps } from '@/interfaces/chatbot';
 import { FC, useState } from 'react';
 import { Dashboard } from '@mui/icons-material';
 import { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
 import { styled } from '@mui/material/styles';
 import { data } from '@/components/chatbot'
-import LessonPlan from '@/components/chatbot/lessonplan';
+import DetectDonutChart, { PlagDonutChart } from '@/components/Donut/DonutChart'
 
 const BootstrapTooltip = styled(({ className, ...props }: TooltipProps) => (
   <Tooltip {...props} arrow classes={{ popper: className }} />
@@ -23,20 +22,25 @@ const BootstrapTooltip = styled(({ className, ...props }: TooltipProps) => (
   },
 }));
 
-interface ChatbotProps {
-  setAnswer: (message: string) => void;
-  clearAnswer: () => void;
-}
-
 const Chatbot: FC = () => {
-  const [lang, setLang] = useState('')
-  const [text, setText] = useState('')
+  const [text, setText] = useState<string>('')
+  const [detect, setDetect] = useState<boolean>(true);
+  const [plag, setPlag] = useState<boolean>(true);
+  const [detectAnswer, setDetectAnswer] = useState<any>(null);
+  const [plagAnswer, setPlagAnswer] = useState<any>(null);
+
   const router: NextRouter = useRouter();
 
   console.log('searching...')
 
+  let Bot: any = null
+  let AIWritingDetectBot: any = null
   const bot_id: any = router.query;
-  const Bot = data.find(item => item.id === bot_id.id)?.data as unknown as FC<ChatbotProps>
+  if (bot_id.id !== "Detect AI-Writing & Plagiarism") {
+    Bot = data.find(item => item.id === bot_id.id)?.data as unknown as FC<ChatbotProps>
+  } else {
+    AIWritingDetectBot = data.find(item => item.id === bot_id.id)?.data as unknown as FC<AIWritingDetectChatbotProps>
+  }
 
   const clearAnswer = () => {
     setText('')
@@ -44,6 +48,36 @@ const Chatbot: FC = () => {
 
   const displayAnswer = (answer: string) => {
     setText(text => text.concat(answer))
+  }
+
+  const setPlagFunc = (state: boolean) => {
+    setPlag(state)
+  }
+
+  const setDetectFunc = (state: boolean) => {
+    setDetect(state)
+  }
+
+  const setDetectAnswerFunc = (answer: any) => {
+    setDetectAnswer(answer)
+  }
+
+  const setPlagAnswerFunc = (answer: any) => {
+    setPlagAnswer(answer)
+  }
+
+  const renderPlagResult = (payload: any) => {
+    const a = `<h2>Average similarity: ${Math.floor(payload.plagia_score)}%</h2>`
+    const b = payload.items.map((item: any) => `
+      <h4>Plagiarism occurred in the following</h4>
+      <a href='${item.candidates[0].url}' style={{color: 'blue'}}>${item.candidates[0].url}</a>
+      <br/>
+      <b>Similarity: ${Math.floor(item.candidates[0].plagia_score * 100)}%</b>
+      <br/>
+      <h3>Plagiarism occurred in the following sections:</h3>
+      <p><b>Section:</b>${item.candidates[0].plagiarized_text}</p> 
+    `).join('')
+    return a + b
   }
 
   return (
@@ -116,7 +150,7 @@ const Chatbot: FC = () => {
                 paddingX={{ xs: 2, sx: 2, md: 5 }}
               >
                 <Link href="/">
-                  <Typography className='custom_font' sx={{ cursor: 'pointer' }} fontSize={{ xs: 18, sx: 25, md: 30 }}>TalentAssist</Typography>
+                  <Typography className='custom_font' sx={{ cursor: 'pointer' }} fontSize={{ xs: 18, sx: 25, md: 30 }}>Teach Assist</Typography>
                 </Link>
                 <Box sx={{ width: '80%', display: 'flex', alignItems: 'center', justifyContent: 'end' }}>
                   <Link href={`/home`}>
@@ -129,16 +163,87 @@ const Chatbot: FC = () => {
                   <BootstrapTooltip title="Credit">
                     <Typography sx={{ textAlign: 'center', mx: 4, borderRadius: 10, border: '2px solid #333', padding: 1 }}><span style={{ fontWeight: 'bolder' }}>2 / 99</span></Typography>
                   </BootstrapTooltip>
-                  <Typography sx={{ fontWeight: 100, border: '2px solid #333', borderRadius: 10, padding: 1 }}>Free plan</Typography>
+                  <BootstrapTooltip title="Plan">
+                    <Typography sx={{ fontWeight: 'bolder', border: '2px solid #333', borderRadius: 10, padding: 1 }}>Free plan</Typography>
+                  </BootstrapTooltip>
                 </Box>
               </Box>
               <Box
                 padding={{ xs: 2, sx: 3, md: 10 }}
               >
                 <Grid container>
-                  <Bot setAnswer={displayAnswer} clearAnswer={clearAnswer} />
+                  {bot_id.id !== "Detect AI-Writing & Plagiarism" && <Bot setAnswer={displayAnswer} clearAnswer={clearAnswer} />}
+                  {bot_id.id === "Detect AI-Writing & Plagiarism" && <AIWritingDetectBot plag={plag} detect={detect} clearAnswer={clearAnswer} setPlag={setPlagFunc} setDetect={setDetectFunc} setPlagAnswer={setPlagAnswerFunc} setDetectAnswer={setDetectAnswerFunc} />}
                   <Grid item xs={12} sm={12} md={7} lg={8} style={{ background: '#fff', padding: 30 }} borderLeft={{ md: '1px solid #333' }}>
-                    <div dangerouslySetInnerHTML={{ __html: text }}></div>
+
+                    {bot_id.id !== "Detect AI-Writing & Plagiarism" && <div dangerouslySetInnerHTML={{ __html: text }}></div>}
+                    {bot_id.id === "Detect AI-Writing & Plagiarism" && <Box>
+                      {
+                        (detectAnswer || plagAnswer) && (<Box style={{ padding: 5 }}>
+                          {
+                            detect && detectAnswer && (<Box style={{ marginTop: 3 }}>
+                              <Typography variant='h2'>Detect AI Percentage</Typography>
+                              <Typography variant='h4'>The amount of detected is{" "}
+                                {detectAnswer.status === 'success' &&
+                                  Math.ceil(detectAnswer.ai_score * 100)}
+                                %</Typography>
+                              <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 5, marginBottom: 2 }}>
+                                <Box style={{ width: '32px', height: '32px', backgroundColor: 'red' }}>
+                                </Box>
+                                <DetectDonutChart data={[
+                                  {
+                                    label: "Plagiarism",
+                                    percentage:
+                                      100 - Math.ceil(detectAnswer.ai_score * 100),
+                                  },
+                                  {
+                                    label: "Detect AI",
+                                    percentage: Math.ceil(detectAnswer.ai_score * 100),
+                                  },
+                                ]} />
+                              </Box>
+                            </Box>)
+                          }
+                          {
+                            plag && plagAnswer && (<Box style={{ marginTop: 3 }}>
+                              <Typography variant='h2'>Detect Plagiarism</Typography>
+                              <Box style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                {
+                                  plagAnswer.status === 'success' && (<Box style={{ display: 'flex', justifyContent: 'center' }}>
+                                    <Box style={{ display: 'flex', justifyContent: 'center' }}>
+                                      <Box style={{ width: '32px', height: '32px', backgroundColor: 'yellow' }}>
+                                      </Box>
+                                      <Typography variant='h3'>Plagerism Percentage</Typography>
+                                    </Box>
+                                    <PlagDonutChart
+                                      data={[
+                                        {
+                                          label: "Detect AI",
+                                          percentage: 100 - Math.floor(plagAnswer.plagia_score)
+                                        },
+                                        {
+                                          label: "Plagiarism",
+                                          percentage: Math.floor(plagAnswer.plagia_score),
+                                        },
+                                      ]}
+                                    />
+                                    {plagAnswer && (
+                                      <div
+                                        className=" prose text-sm"
+                                        style={{ minWidth: "100%" }}
+                                        dangerouslySetInnerHTML={{
+                                          __html: renderPlagResult(plagAnswer)
+                                        }}
+                                      />
+                                    )}
+                                  </Box>)
+                                }
+                              </Box>
+                            </Box>)
+                          }
+                        </Box>)
+                      }
+                    </Box>}
                   </Grid>
                 </Grid>
               </Box>

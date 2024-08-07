@@ -235,7 +235,7 @@ def create_ppt(slides_content, template_choice, presentation_title, presenter_na
     # Delete the first two slides after all new slides have been added
     delete_first_two_slides(prs)
     timestamp = datetime.datetime.now().timestamp()
-    save_path = f"../node/public/GeneratedPresentations/{presenter_name}_{timestamp}.pptx"
+    save_path = f"GeneratedPresentations/{presenter_name}_{timestamp}.pptx"
     # Save the presentation
     prs.save(save_path)
     return f"GeneratedPresentations/{presenter_name}_{timestamp}"

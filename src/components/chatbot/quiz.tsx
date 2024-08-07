@@ -8,6 +8,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { ChatbotItem, ChatbotProps } from "@/interfaces/chatbot";
+import { serverUrl } from "@/config/development";
 
 const QUIZ: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
     const [data, setData] = useState({ lang: "English", grade: 1, quizType: "Multi-choice" })
@@ -37,7 +38,7 @@ const QUIZ: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
         } else {
             clearAnswer()
             try {
-                const response: any = await fetch(`http://localhost:5000/chatbot/quiz`, {
+                const response: any = await fetch(`${serverUrl}/chatbot/quiz`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -154,7 +155,7 @@ const QUIZ: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
             <Typography>{bot.text}</Typography>
         </Box>
         <Box sx={{ marginY: 2 }}>
-            <TextField fullWidth label="Grade Level" type="number" variant='standard' name="grade" onChange={handleChange} />
+            <TextField fullWidth label="Grade Level" type="number" variant='standard' name="grade" onChange={handleChange} defaultValue={1} />
         </Box>
         <Box sx={{ marginY: 2 }}>
             <TextField fullWidth label="Quiz Topic" variant='standard' name="topic" onChange={handleChange} />

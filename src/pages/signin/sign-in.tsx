@@ -15,13 +15,15 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { InputAdornment } from '@mui/material';
 import { AccountCircle } from '@mui/icons-material';
 import LockIcon from '@mui/icons-material/Lock';
+import { useRouter } from 'next/router';
+import { useAuthContext } from '@/contexts/auth-context';
 
 function Copyright(props: any) {
     return (
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
             {'Copyright © '}
             <Link color="inherit" href="https://mui.com/">
-                Talent Assist
+                Teach Assist
             </Link>{' '}
             {new Date().getFullYear()}
             {'.'}
@@ -33,6 +35,15 @@ function Copyright(props: any) {
 const defaultTheme = createTheme();
 
 export default function SignIn() {
+    const router = useRouter()
+    const auth = useAuthContext();
+
+    if (!auth) {
+        throw new Error("Occured error to get context");
+    }
+
+    const { signIn } = auth;
+
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
@@ -40,6 +51,17 @@ export default function SignIn() {
             email: data.get('email'),
             password: data.get('password'),
         });
+
+        const email: string = data != null ? data.get('email') as string : ''
+        const password: string = data != null ? data.get('password') as string : ''
+
+        try {
+            signIn(email, password);
+            router.push("/")
+        } catch (err) {
+            console.log(err);
+            //notification
+        }
     };
 
     return (
