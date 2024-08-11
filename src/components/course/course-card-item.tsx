@@ -4,7 +4,7 @@ import Box from '@mui/material/Box'
 import Rating from '@mui/material/Rating'
 import Typography from '@mui/material/Typography'
 import IconButton, { iconButtonClasses } from '@mui/material/IconButton'
-import ArrowForward from '@mui/icons-material/ArrowForward'
+// import ArrowForward from '@mui/icons-material/ArrowForward'
 import { Course } from '@/interfaces/course'
 
 interface Props {
@@ -57,18 +57,14 @@ const CourseCardItem: FC<Props> = ({ item }) => {
           </Box>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="h5" color="primary.main">
-              {'$' + item.price}
-            </Typography>
-            <Typography variant="h6">/ course</Typography>
+          {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
           </Box>
           <IconButton
             color="primary"
             sx={{ '&:hover': { backgroundColor: 'primary.main', color: 'primary.contrastText' } }}
           >
             <ArrowForward />
-          </IconButton>
+          </IconButton> */}
         </Box>
       </Box>
     </Box>

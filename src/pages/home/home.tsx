@@ -1,12 +1,13 @@
 import { Grid, Typography, Tooltip } from '@mui/material';
 import { Box } from '@mui/material';
-import { chatbots_items } from './chatbots-data';
+import { chatbots_items } from '../../utils/chatbots-data';
 import ChatbotItemCard from '../../components/chatbot';
 import Link from 'next/link';
 import React, { FC, useEffect, useState } from 'react';
 import { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
 import { styled } from '@mui/material/styles';
 import { ChatbotItem } from '../../interfaces/chatbot'
+import { useAuthContext } from '@/contexts/auth-context';
 
 const BootstrapTooltip = styled(({ className, ...props }: TooltipProps) => (
   <Tooltip {...props} arrow classes={{ popper: className }} />
@@ -22,6 +23,14 @@ const BootstrapTooltip = styled(({ className, ...props }: TooltipProps) => (
 const Home: FC = () => {
   const [chatbots, setChatbots] = useState<ChatbotItem[]>([])
   const [timerRefs, setTimerRefs] = useState<any>([]);
+  const auth = useAuthContext()
+
+  if (!auth) {
+    // process the context if the auth is null;
+    throw new Error("Occured error to get context")
+  }
+
+  const { bot, plan } = auth
 
   useEffect(() => {
     let delay = 200;
@@ -116,10 +125,10 @@ const Home: FC = () => {
                 </Link>
                 <Box sx={{ width: '80%', display: 'flex', alignItems: 'center', justifyContent: 'end' }}>
                   <BootstrapTooltip title="Credit">
-                    <Typography sx={{ textAlign: 'center', mx: 4, borderRadius: 10, border: '2px solid #333', padding: 1 }}><span style={{ fontWeight: 'bolder' }}>2 / 99</span></Typography>
+                    <Typography sx={{ textAlign: 'center', mx: 4, borderRadius: 10, border: '2px solid #333', padding: 1, background: bot.current != bot.limit ? '#fff' : 'yellow' }}><span style={{ fontWeight: 'bolder' }}>{bot.current} / {bot.limit}</span></Typography>
                   </BootstrapTooltip>
                   <BootstrapTooltip title="Plan">
-                    <Typography sx={{ fontWeight: 'bolder', border: '2px solid #333', borderRadius: 10, padding: 1 }}>Free plan</Typography>
+                    <Typography sx={{ fontWeight: 'bolder', border: '2px solid #333', borderRadius: 10, padding: 1 }}>{plan} plan</Typography>
                   </BootstrapTooltip>
                 </Box>
               </Box>

@@ -1,4 +1,4 @@
-import { Grid, Typography } from "@mui/material";
+import { Alert, Grid, Snackbar, SnackbarCloseReason, Typography } from "@mui/material";
 import React, { ChangeEvent, FC, useState } from "react";
 import Box from '@mui/material/Box';
 import TextField from "@mui/material/TextField";
@@ -13,9 +13,20 @@ import FormLabel from '@mui/material/FormLabel';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { ChatbotItem, ChatbotProps } from "@/interfaces/chatbot";
 import { serverUrl } from "@/config/development";
+import { useAuthContext } from "@/contexts/auth-context";
 
 const Presentation: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
     const [data, setData] = useState({ lang: "English", number_of_slides: 3, insert_image: 'simple' })
+    const [toast, setToast] = useState<boolean>(false);
+    const [msg, setMsg] = useState<string>("");
+    const auth = useAuthContext();
+
+    if (!auth) {
+        // process the context if the auth is null;
+        throw new Error("Occured error to get context")
+    }
+
+    const { makingQuiz } = auth;
 
     const handleChange = (e: any) => {
         const { name, value } = e.target
@@ -32,34 +43,40 @@ const Presentation: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
         } else {
             // clearAnswer()
             try {
-                const response: any = await fetch(`${serverUrl}/chatbot/powerpoint`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem("teachai_token")}`
-                    },
-                    body: JSON.stringify({
-                        prompt: data,
-                        language: data.lang
-                    })
-                });
+                // upgrading chat history
+                makingQuiz().then(async (rlt) => {
+                    const response: any = await fetch(`${serverUrl}/chatbot/powerpoint`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem("teachai_token")}`
+                        },
+                        body: JSON.stringify({
+                            prompt: data,
+                            language: data.lang
+                        })
+                    });
 
-                // Check if the response is successful (status code 200)
-                if (response.status === 200) {
-                    const res_data = await response.json()
-                    const download_url = res_data.presentation_link
-                    const a = document.createElement('a');
-                    a.href = `${serverUrl}/${download_url}`
-                    a.download = 'presentation.pptx';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                } else {
-                    console.error('Error:', response.status, response.statusText);
-                    // toast('Something Wrong!')
-                    alert("something went wrong")
-                    // Handle any errors from the request
-                }
+                    // Check if the response is successful (status code 200)
+                    if (response.status === 200) {
+                        const res_data = await response.json()
+                        const download_url = res_data.presentation_link
+                        const a = document.createElement('a');
+                        a.href = `${serverUrl}/${download_url}`
+                        a.download = 'presentation.pptx';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    } else {
+                        console.error('Error:', response.status, response.statusText);
+                        // toast('Something Wrong!')
+                        alert("something went wrong")
+                        // Handle any errors from the request
+                    }
+                }).catch(err => {
+                    setToast(true)
+                    setMsg("You got some error!")
+                })
             } catch (error: any) {
                 if (error?.response?.status === 429) {
                     // toast(error?.response?.data?.error)
@@ -69,6 +86,17 @@ const Presentation: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
                 // Handle any network or other errors
             }
         }
+    }
+
+    const handleClose = (
+        event?: React.SyntheticEvent | Event,
+        reason?: SnackbarCloseReason,
+    ) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setToast(false);
     }
 
     const bot: ChatbotItem = {
@@ -134,6 +162,14 @@ const Presentation: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
         <Box sx={{ marginTop: 3, marginBottom: 2 }}>
             <Button variant='contained' color='success' onClick={handleGenerate}>Generate</Button>
         </Box>
+        <Snackbar open={toast} autoHideDuration={4000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+            <Alert onClose={handleClose}
+                severity="error"
+                variant="filled"
+                sx={{ width: '100%' }}>
+                {msg}
+            </Alert>
+        </Snackbar>
     </Grid>)
 }
 

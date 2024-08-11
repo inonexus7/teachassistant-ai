@@ -1,4 +1,4 @@
-import { Grid, Typography } from "@mui/material";
+import { Alert, Grid, Snackbar, SnackbarCloseReason, Typography } from "@mui/material";
 import React, { FC, useState } from "react";
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -10,9 +10,20 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { ChatbotItem, ChatbotProps } from "@/interfaces/chatbot";
 import { serverUrl } from "@/config/development";
+import { useAuthContext } from "@/contexts/auth-context";
 
 const Icebreaker: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
     const [data, setData] = useState<any>({ lang: 'en', grade: 1, class_Size: 1, num_Ideas: 1 })
+    const [toast, setToast] = useState<boolean>(false);
+    const [msg, setMsg] = useState<string>("");
+    const auth = useAuthContext();
+
+    if (!auth) {
+        // process the context if the auth is null;
+        throw new Error("Occured error to get context")
+    }
+
+    const { makingQuiz } = auth;
 
     const handleChange = (e: any) => {
         const { name, value } = e.target
@@ -37,103 +48,107 @@ const Icebreaker: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
         clearAnswer()
         console.log(data)
         try {
-            // /chatbot/gradeEssay
+            // upgrading chat history
+            makingQuiz().then(async (rlt) => {
+                const response: any = await fetch(`${serverUrl}/chatbot/icebreaker/ideas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem("teachai_token")}`
+                    },
+                    body: JSON.stringify({
+                        prompt: data,
+                        language: data.lang
+                    }),
+                });
 
-            const response: any = await fetch(`${serverUrl}/chatbot/icebreaker/ideas`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem("teachai_token")}`
-                },
-                body: JSON.stringify({
-                    prompt: data,
-                    language: data.lang
-                }),
-            });
 
+                // Check if the response is successful (status code 200)
+                if (response.status === 200) {
+                    const reader = response.body.getReader();
+                    let receivedChunks = [];
 
-            // Check if the response is successful (status code 200)
-            if (response.status === 200) {
-                const reader = response.body.getReader();
-                let receivedChunks = [];
+                    let answer = '';
 
-                let answer = '';
+                    const read = async () => {
+                        const { done, value } = await reader.read();
 
-                const read = async () => {
-                    const { done, value } = await reader.read();
+                        if (done) {
+                            // All data has been received
+                            console.log('Stream finished');
+                            // answer = answer.replace(/Wait a moment.../g, '');
+                        } else {
+                            let text = new TextDecoder().decode(value)
 
-                    if (done) {
-                        // All data has been received
-                        console.log('Stream finished');
-                        // answer = answer.replace(/Wait a moment.../g, '');
-                    } else {
-                        let text = new TextDecoder().decode(value)
+                            // Convert double asterisks to bold
+                            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-                        // Convert double asterisks to bold
-                        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                            // Convert single asterisks to italic
+                            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-                        // Convert single asterisks to italic
-                        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                            // Convert new lines to paragraph tags
+                            text = text.replace(/\n/g, '<br/>');
 
-                        // Convert new lines to paragraph tags
-                        text = text.replace(/\n/g, '<br/>');
+                            // Convert headers (lines starting with "###" to h3)
+                            text = text.replace(/^### (.*$)/gim, '<h3>$1</h3>');
 
-                        // Convert headers (lines starting with "###" to h3)
-                        text = text.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+                            // Convert headers (lines starting with "##" to h2)
+                            text = text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
 
-                        // Convert headers (lines starting with "##" to h2)
-                        text = text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+                            // Convert headers (lines starting with "#" to h1)
+                            text = text.replace(/^# (.*$)/gim, '<h1>$1</h1>');
 
-                        // Convert headers (lines starting with "#" to h1)
-                        text = text.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+                            // Convert lists
+                            text = text.replace(/^- (.*$)/gim, '<li>$1</li>');
 
-                        // Convert lists
-                        text = text.replace(/^- (.*$)/gim, '<li>$1</li>');
+                            // Wrap <li> elements with <ul>
+                            text = text.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
 
-                        // Wrap <li> elements with <ul>
-                        text = text.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
+                            // text = text.replace(/\n/g, '<br />');
+                            // Regular expression to match URLs
+                            const linkRegex = /\(\s*(https:\/\/[^\s)]+)\s*\)/;
 
-                        // text = text.replace(/\n/g, '<br />');
-                        // Regular expression to match URLs
-                        const linkRegex = /\(\s*(https:\/\/[^\s)]+)\s*\)/;
+                            // Replace link strings with <a> tags
+                            const replacedString = text.replace(linkRegex, (match) => {
+                                let bmatch = match.replace(/[\[\]()]/g, '')
+                                bmatch = bmatch.replace(' ', '')
+                                return `  ${bmatch}`;
+                            });
 
-                        // Replace link strings with <a> tags
-                        const replacedString = text.replace(linkRegex, (match) => {
-                            let bmatch = match.replace(/[\[\]()]/g, '')
-                            bmatch = bmatch.replace(' ', '')
-                            return `  ${bmatch}`;
-                        });
+                            let newStr = replacedString.replace(/[\[(]http[^\])]+[\])]/g, (match) => {
+                                let string = match.replace(/[\[\]()]/g, '')
+                                return string
+                            })
 
-                        let newStr = replacedString.replace(/[\[(]http[^\])]+[\])]/g, (match) => {
-                            let string = match.replace(/[\[\]()]/g, '')
-                            return string
-                        })
+                            newStr = newStr.replace(/http:\/\/[^\s]+/g, (match) => {
+                                return `  <a href='${match}' target='_blank' style={{color: 'blue'}}>${match}</a>`
+                            })
+                            newStr = newStr.replace(/https:\/\/[^\s]+/g, (match) => {
+                                return `  <a href='${match}' target='_blank' style={{color: 'blue'}}>${match}</a>`
+                            })
 
-                        newStr = newStr.replace(/http:\/\/[^\s]+/g, (match) => {
-                            return `  <a href='${match}' target='_blank' style={{color: 'blue'}}>${match}</a>`
-                        })
-                        newStr = newStr.replace(/https:\/\/[^\s]+/g, (match) => {
-                            return `  <a href='${match}' target='_blank' style={{color: 'blue'}}>${match}</a>`
-                        })
+                            text = newStr.replace(/```html|```/g, '')
+                            // text = newStr.replace(/\n/g, '<br />');
+                            answer += text;
+                            setAnswer(text)
+                            // console.log('Received chunk:', text);
 
-                        text = newStr.replace(/```html|```/g, '')
-                        // text = newStr.replace(/\n/g, '<br />');
-                        answer += text;
-                        setAnswer(text)
-                        // console.log('Received chunk:', text);
+                            // Call read() again to receive the next chunk
+                            read();
+                        }
+                    };
 
-                        // Call read() again to receive the next chunk
-                        read();
-                    }
-                };
-
-                read();
-            } else {
-                console.error('Error:', response.status, response.statusText);
-                // toast('Something Wrong!')
-                alert("something went wrong")
-                // Handle any errors from the request
-            }
+                    read();
+                } else {
+                    console.error('Error:', response.status, response.statusText);
+                    // toast('Something Wrong!')
+                    alert("something went wrong")
+                    // Handle any errors from the request
+                }
+            }).catch(err => {
+                setToast(true)
+                setMsg("You got some error!")
+            })
         } catch (error) {
             const err: any = error;
             if (err?.response?.status === 429) {
@@ -144,6 +159,17 @@ const Icebreaker: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
             // Handle any network or other errors
         }
 
+    }
+
+    const handleClose = (
+        event?: React.SyntheticEvent | Event,
+        reason?: SnackbarCloseReason,
+    ) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setToast(false);
     }
 
     return (<Grid item sm={12} md={5} lg={4} style={{ background: '#fff', padding: 30 }}>
@@ -199,6 +225,14 @@ const Icebreaker: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
         <Box sx={{ marginTop: 3, marginBottom: 2 }}>
             <Button variant='contained' color='success' onClick={handleSubmit}>Generate</Button>
         </Box>
+        <Snackbar open={toast} autoHideDuration={4000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+            <Alert onClose={handleClose}
+                severity="error"
+                variant="filled"
+                sx={{ width: '100%' }}>
+                {msg}
+            </Alert>
+        </Snackbar>
     </Grid>)
 }
 

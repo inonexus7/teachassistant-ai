@@ -29,6 +29,7 @@ from getQuizFromFile import genQuizFromFile
 from flask_cors import CORS
 from lessonplannerapi import get_links
 import jwt
+import datetime
 import time
 from pymongo import MongoClient
 
@@ -45,8 +46,8 @@ app.register_error_handler(404, page_not_found)
 client = OpenAI(api_key=config.DevelopmentConfig.OPENAI_KEY)
 
 # connect to mongodb
-client = MongoClient(host="mongodb://127.0.0.1", port=27017)
-db = client['assistman']
+mongo_client = MongoClient(host="mongodb://127.0.0.1", port=27017)
+db = mongo_client['assistman']
 
 def authenticate(request):
     # Retrieve the JWT token from the 'Authorization' header
@@ -60,13 +61,18 @@ def authenticate(request):
             # You need to provide the 'secret' key used to encode the JWT
             # Ensure to catch exceptions that may occur during token decoding
             payload = jwt.decode(token, config.DevelopmentConfig.JWT_SECRET, algorithms=["HS256"])
-            return payload
+            user_collection = db['users']
+            user = user_collection.find_one({ "email": payload['email'] })
+            if user:
+                return payload
+            else:
+                return Response("There is no such user", status=401)
         except jwt.ExpiredSignatureError:
-            return "Token has expired", 401
+            return Response("Token has expired", status=401)
         except (jwt.InvalidTokenError, Exception) as e:
-            return "Invalid token", 401
+            return Response("Invalid token", status=401)
     else:
-        return 'No Authorization Header Found', 401
+        return Response('No Authorization Header Found', status=401)
 
 def send_messages(messages, model):
     return client.chat.completions.create(
@@ -84,12 +90,37 @@ def event_stream(messages, filename, reqLink=None):
         text = line.choices[0].delta.content
         if text is not None and len(text): 
             yield text
-    
+
+@app.route('/updatingChatHistory', methods=['POST'])
+def updatingChatHistory():
+    body = request.get_json()
+    user_email = body['email']
+    chat_collection = db['chat']
+    chat_history = chat_collection.find_one({ 'email': user_email })
+    if chat_history is None:
+        return Response("Register and try to login again", status=500)
+    if chat_history['plan'] == "Free":
+        if chat_history['current'] + 1 > chat_history['limit']:
+            return jsonify({"msg": "You exceeded the limit!"}), 431
+        else:
+            chat_collection.update_one({ 'email': user_email }, { '$inc': { 'current': 1 } })
+    else:
+        lastUpdate_str = chat_history['lastUpdate']
+        lastUpdate = datetime.date(int(lastUpdate_str.split('-')[0]), int(lastUpdate_str.split('-')[1]), int(lastUpdate_str.split('-')[2]))
+        today = datetime.date.today()
+        if today > lastUpdate:
+            return jsonify({"msg": "you should pay now!"}), 432
+        else:
+            if chat_history['current'] + 1 > chat_history['limit']:
+                return jsonify({"msg": "You exceeded the limit!"}), 431
+            else:
+                chat_collection.update_one({ 'email': user_email }, { '$inc': { 'current': 1 } })
+    return jsonify({"msg": "success!"}), 200
 
 @app.route('/chatbot/lessonplanner', methods = ['GET', 'POST'])
 def lessonplanner():
     # authenciate
-    # token = authenticate(request)
+    token = authenticate(request)
     body = request.get_json()
 
     print('Here is your Data: ', body)
@@ -104,6 +135,7 @@ def lessonplanner():
 
 @app.route('/lessonplanner/chat', methods = ['GET', 'POST'])
 def lessonplannerChat():
+    token = authenticate(request)
     data = request.get_json()
 
     print('Here is your Data: ', data)
@@ -122,6 +154,7 @@ def lessonplannerChat():
 
 @app.route('/chatbot/quiz', methods = ['POST'])
 def quiz():
+    token = authenticate(request)
     data = request.get_json()
 
     print(data)
@@ -143,6 +176,7 @@ def quiz():
 
 @app.route('/chatbot/gradeEssay', methods = ['POST'])
 def grade():
+    token = authenticate(request)
     data = request.get_json()
     print(data)
     data = data['prompt']
@@ -154,59 +188,9 @@ def grade():
     messages, filename = grade_essay.grade(user_input, language)
     return Response(event_stream(messages, filename), mimetype='text/event-stream')
 
-# @app.route('/gradeEssay/rubric', methods=['POST'])
-# def rubric():
-#     data = request.get_json()
-#     essay_question = data["essay_question"]
-#     user_id = data['user_id']
-#     conversation_id = data['conversation_id']
-#     grade = data["grade"]
-#     language = data['language']
-#     essay_question = essay_question + "for grade:" + grade
-#     messages, filename = grade_essay.generate_rubric(essay_question, user_id, conversation_id, language)
-#     return Response(event_stream(messages, filename), mimetype='text/event-stream')
-
-# @app.route('/lessonComp/chat', methods = ['POST'])
-# def gen_questions_chat():
-#     """for generating more questions for the write_up with the chat"""
-#     data = request.get_json()
-#     user_id = data['user_id']
-#     conversation_id = data['conversation_id']
-
-#     data = data['prompt']
-#     content = data['content']
-#     user_input = data
-#     language = data['language']
-#     messages, filename = lesson_comp.generate_questions(prompt=user_input, user_id=user_id, conversation_id=conversation_id, language=language, content=content)
-#     return Response(event_stream(messages, filename, True), mimetype='text/event-stream')
-
-# @app.route("/lessonComp/questions", methods=['POST'])
-# def gen_questions():
-#     data = request.get_json()
-#     user_id = data['user_id']
-#     conversation_id = data['conversation_id']
-
-#     data = data['prompt']
-#     writeup = data["writeup"]
-#     qtype = data["qtype"]
-#     qnumber = data["qnumber"]
-#     language = data['language']
-#     notes = f"Question type: {qtype}, Number of questions: {qnumber}"
-#     messages, filename = lesson_comp.generate_questions(writeup, user_id, conversation_id, notes, language)
-#     return Response(event_stream(messages, filename), mimetype='text/event-stream')
-
-# @app.route('/mathquiz/evaluate', methods = ['POST'])
-# def index():
-#     data = request.get_json()
-#     user_id = data['user_id']
-#     conversation_id = data['conversation_id']
-#     user_input = data["prompt"]
-#     language = data['language']
-#     messages, filename = math_quiz.evaluate_quiz(user_input, user_id, conversation_id, language)
-#     return Response(event_stream(messages, filename), mimetype='text/event-stream')
-
 @app.route("/chatbot/mathquiz/gen", methods=["POST"])
 def gen_quiz():
+    token = authenticate(request)
     data = request.get_json()
 
     data = data["prompt"]
@@ -219,6 +203,7 @@ def gen_quiz():
 
 @app.route("/mathquiz/answer", methods=["POST"])
 def answers():
+    token = authenticate(request)
     data = request.get_json()
     user_id = data['user_id']
     conversation_id = data['conversation_id']
@@ -229,6 +214,7 @@ def answers():
 
 @app.route('/chatbot/math/lesson', methods = ['POST'])
 def lesson():
+    token = authenticate(request)
     data = request.get_json()
 
     print(data)
@@ -241,6 +227,7 @@ def lesson():
 
 @app.route('/chatbot/video/summarize', methods = ['POST'])
 def summarizevid():
+    token = authenticate(request)
     data = request.get_json()
     print('Recieved Data: ', data)
     data = data['prompt']
@@ -251,6 +238,7 @@ def summarizevid():
 
 @app.route('/chatbot/video/quiz', methods = ['POST'])
 def videoquiz():
+    token = authenticate(request)
     data = request.get_json()
     print('Recieved Data: ', data)
     
@@ -265,6 +253,7 @@ def videoquiz():
 
 @app.route('/chatbot/detectai', methods = ['POST'])
 def aidetect():
+  token = authenticate(request)
   data = request.get_json()
 #   print('Recieved Data: ', data)
   data = data['body']
@@ -276,6 +265,7 @@ def aidetect():
 
 @app.route('/chatbot/plagirism', methods = ['POST'])
 def plagiarism():
+  token = authenticate(request)
   data = request.get_json()
 #   print('Recieved Data: ', data)
   data = data['body']
@@ -288,6 +278,7 @@ def plagiarism():
 
 @app.route('/chatbot/powerpoint', methods = ['POST'])
 def powerpoint():
+    token = authenticate(request)
     data = request.get_json()
 
     description = data['prompt']['description']
@@ -309,6 +300,7 @@ def send_generated_image(path):
 
 @app.route('/chatbot/report/answer', methods=['POST'])
 def generateReport():
+    token = authenticate(request)
     body = request.get_json()
     try:
         response = Response(event_stream(genReport(body['prompt']), "filename"), mimetype='text/event-stream')
@@ -320,6 +312,7 @@ def generateReport():
 
 @app.route('/chatbot/esl/answer', methods=['POST'])
 def generateESL():
+    token = authenticate(request)
     body = request.get_json()
     try:
         response = Response(event_stream(genESLActivity(body['prompt']), filename="filename"), mimetype='text/event-stream')
@@ -331,6 +324,7 @@ def generateESL():
 
 @app.route('/chatbot/docurl/quiz', methods=['POST'])
 def generateGenQuizFromFile():
+    token = authenticate(request)
     # Check if the 'file' key is in the request.files dictionary
     body = request.get_json()
     data = body['prompt']
@@ -368,6 +362,7 @@ def generateGenQuizFromFile():
 
 @app.route('/quiz/analyze', methods=['POST'])
 def generateAddtionalAnswer_1():
+    token = authenticate(request)
     body = request.get_json()
     user_id = body['user_id']
     conversation_id = body['conversation_id']
@@ -386,6 +381,7 @@ def generateAddtionalAnswer_1():
 
 @app.route('/translate', methods=['POST'])
 def translateWithGoogle():
+    token = authenticate(request)
     body = request.get_json()
     lang = body['currentLang']
     text = body['answer']
@@ -405,6 +401,7 @@ def translateWithGoogle():
 
 @app.route('/chatbot/homework/creator', methods=['POST'])
 def createHomework():
+    token = authenticate(request)
     body = request.get_json()
     try:
         response = Response(event_stream(creHomework(body['prompt']), "filename"), mimetype='text/event-stream')
@@ -416,6 +413,7 @@ def createHomework():
 
 @app.route('/chatbot/test/creator', methods=['POST'])
 def creTest():
+    token = authenticate(request)
     body = request.get_json()
     try:
         response = Response(event_stream(createTest(body['prompt']), "filename"), mimetype='text/event-stream')
@@ -427,6 +425,7 @@ def creTest():
 
 @app.route('/chatbot/icebreaker/ideas', methods=['POST'])
 def icebreakerIdeas():
+    token = authenticate(request)
     body = request.get_json()
     try:
         response = Response(event_stream(icebreaker_Ideas(body['prompt']), "filename"), mimetype='text/event-stream')
@@ -451,18 +450,24 @@ def signinUser():
                 'email': person['email']
             }
             token = jwt.encode(payload, config.DevelopmentConfig.JWT_SECRET, algorithm='HS256')
-            print("Token: ", token)
+            chat_collection = db['chat']
+            chat_history = chat_collection.find_one({ 'email': email })
+            if chat_history is None:
+                return Response("Register and try to login again", status=500)
 
             result = {
                 'token': token,
-                'user': payload
+                'user': payload,
+                'current': chat_history['current'],
+                'limit': chat_history['limit'],
+                'plan': chat_history['plan']
             }
 
             return jsonify({ 'result': result }), 200
         else:
             return jsonify({ 'msg': 'there is no such person' }), 424
     except Exception as ex:
-        print("Raised an error!")
+        print("Raised an error!", ex)
         return Response("Server Error!", status=500)
 
 @app.route('/api/v1/auth/register', methods=['POST'])
@@ -477,7 +482,7 @@ def signupUser():
         
         # checking the new user and insert one.
         user_collection = db['users']
-        print(email)
+        chat_collection = db['chat']
         person = user_collection.find_one({ "email": email})
 
         if person is not None:
@@ -486,11 +491,31 @@ def signupUser():
         else:
             # return jsonify({'result', 'result'})
             result = user_collection.insert_one({'fullname': name, 'email': email, 'password': password, 'addr': addr, 'phone': phone})
+            current_date = datetime.date.today()
+            chat = chat_collection.insert_one({ 'email': email, 'plan': 'Free', 'current': 0, 'limit': 5, 'lastUpdate': f"{current_date.year}-{current_date.month}-{current_date.day}" })
             return jsonify({ "result": "inserted" }), 200
     except Exception as ex:
         print("Unknown error!")
         print(ex)
         return Response("Server error!", status=500)
+
+@app.route("/getUserState", methods=['POST'])
+def getUserState():
+    body = request.get_json()
+    token = body['token']
+    payload = jwt.decode(token, config.DevelopmentConfig.JWT_SECRET, algorithms=["HS256"])
+    user_collection = db['chat']
+    chat = user_collection.find_one({ 'email': payload['email'] })
+    if chat is not None:
+        return jsonify({ "plan": chat['plan'], "chat": { "current": chat['current'], "limit": chat['limit'] } }), 200
+    else:
+        return jsonify({ "msg": "error" }), 414
+
+@app.route("/upgradingPlan", methods=['POST'])
+def upgradingPlan():
+    body = request.get_json()
+    plan = body['plan']
+    return jsonify({ "payUrl": "https://mui.com" }), 200
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port='5000')

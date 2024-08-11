@@ -3,7 +3,7 @@ import React, { FC } from "react";
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
-import { ChatbotItem } from "@/interfaces/chatbotItem";
+import { ChatbotItem } from "@/interfaces/chatbot";
 import { NextRouter, useRouter } from "next/router";
 
 const Item = styled(Paper)(({ theme }) => ({

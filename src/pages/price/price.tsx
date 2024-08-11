@@ -1,6 +1,9 @@
 import { MainLayout } from "@/components/layout";
-import { Box, Typography } from "@mui/material";
-import { FC, useState } from "react";
+import { axiosApi } from "@/config/development";
+import { useAuthContext } from "@/contexts/auth-context";
+import { Alert, Box, Snackbar, SnackbarCloseReason, Typography } from "@mui/material";
+import { useRouter } from "next/router";
+import { FC, useEffect, useState } from "react";
 
 interface PlanType {
     title: string,
@@ -24,7 +27,7 @@ const plans: PlanType[] = [
         price: 9.99,
         items: [
             "Access to All the Chatbots",
-            "30 chat requests per day",
+            "20 chat requests per day",
             "1 member seat",
             "Write in 30+ languages",
             "24/7 live chat support",
@@ -36,7 +39,7 @@ const plans: PlanType[] = [
         price: 14.99,
         items: [
             "Access to All the Chatbots",
-            "90 chat requests per day",
+            "50 chat requests per day",
             "1 member seat",
             "Write in 30+ languages",
             "24/7 live chat support",
@@ -49,9 +52,47 @@ const plans: PlanType[] = [
 
 const Price: FC = () => {
     const [currentPlan, setCurrentPlan] = useState<number>(0);
+    const [toast, setToast] = useState<boolean>(false);
+    const [msg, setMsg] = useState<string>("");
+    const router = useRouter()
+    const auth = useAuthContext()
 
-    const handlePlan = (plan: PlanType) => {
-        console.log(`title: ${plan.title}, price: $${plan.price}`)
+    if (!auth) {
+        throw new Error("auth provide error")
+    }
+
+    const { plan } = auth;
+
+    useEffect(() => {
+        const current = plan == 'Free' ? 0 : plan == 'Starter' ? 1 : 2
+        setCurrentPlan(current)
+    }, [plan])
+
+    const handlePlan = async (plan: PlanType, idx: number) => {
+        if (currentPlan == idx) {
+            // clicking current plan and skip it
+            return false;
+        }
+        // process upgrading plan
+        try {
+            const rlt = await axiosApi.post("/upgradingPlan", { plan });
+            const pay_url = rlt.data.payUrl;
+            window.open(pay_url, '_blank');
+        } catch (err) {
+            setToast(true);
+            setMsg("Error! You got some error during upgrading your plan.");
+        }
+    }
+
+    const handleClose = (
+        event?: React.SyntheticEvent | Event,
+        reason?: SnackbarCloseReason,
+    ) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setToast(false);
     }
 
     return <MainLayout>
@@ -80,7 +121,7 @@ const Price: FC = () => {
             </Box>
             <Box sx={{ display: { xs: 'block', sm: 'block', md: 'flex' }, justifyContent: 'center', marginBottom: 8 }}>
                 {
-                    plans.map((item, i) => (<Box onClick={() => handlePlan(item)} className="plan_item" key={`plan_${i}`} sx={{ backgroundColor: '#ffffff', margin: 3, minHeight: 550, minWidth: 400, padding: 3 }}>
+                    plans.map((item, i) => (<Box onClick={() => handlePlan(item, i)} className="plan_item" key={`plan_${i}`} sx={{ backgroundColor: '#ffffff', margin: 3, minHeight: 550, minWidth: 400, padding: 3 }}>
                         {currentPlan == i && <div className="currentPlan"></div>}
                         <Box sx={{ textAlign: 'center', paddingTop: 3 }}>
                             <Typography sx={{ fontSize: '1.5rem', fontWeight: 600 }}>{item.title}</Typography>
@@ -105,6 +146,14 @@ const Price: FC = () => {
                 }
             </Box>
         </Box>
+        <Snackbar open={toast} autoHideDuration={4000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+            <Alert onClose={handleClose}
+                severity="error"
+                variant="filled"
+                sx={{ width: '100%' }}>
+                {msg}
+            </Alert>
+        </Snackbar>
     </MainLayout>
 }
 

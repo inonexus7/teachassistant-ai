@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -12,16 +12,16 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { AuthContextType } from '@/interfaces/user';
 import { useAuthContext } from '@/contexts/auth-context';
-import { useRouter } from 'next/router';
+// import { useRouter } from 'next/router';
+import { Alert, Snackbar, SnackbarCloseReason } from '@mui/material';
 
 function Copyright(props: any) {
     return (
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
             {'Copyright © '}
-            <Link color="inherit" href="https://mui.com/">
-                Your Website
+            <Link color="inherit" href="/">
+                Teach Assist
             </Link>{' '}
             {new Date().getFullYear()}
             {'.'}
@@ -33,7 +33,9 @@ function Copyright(props: any) {
 const defaultTheme = createTheme();
 
 export default function SignUp() {
-    const router = useRouter();
+    // const router = useRouter();
+    const [toast, setToast] = useState<boolean>(false);
+    const [msg, setMsg] = useState<string>("");
     const auth = useAuthContext();
 
     if (!auth) {
@@ -46,27 +48,37 @@ export default function SignUp() {
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        console.log({
-            email: data.get('email'),
-            password: data.get('password'),
-            fullname: `${data.get('firstName')} ${data.get('lastName')}`,
-            addr: data.get('addr'),
-            phone: data.get('phone')
-        });
 
         const email: string = data != null ? data.get('email') as string : ''
         const password: string = data != null ? data.get('password') as string : ''
         const fullname: string = data != null ? `${data.get('firstName')} ${data.get('lastName')}` as string : ''
         const addr: string = data != null ? data.get('addr') as string : ''
         const phone: string = data != null ? data.get('phone') as string : ''
+        const agree: boolean = data != null ? data.get('agree') == 'on' ? true : false : false;
 
-        try {
-            signUp(email, fullname, password, addr, phone)
-            router.push("/signin")
-        } catch (err) {
-            console.log(err)
+        if (!email || !password || !data.get('firstName') || !data.get('lastName')) {
+            setToast(true)
+            setMsg("Pls check your info (email, password, fullname, ...)")
+            return false;
+        }
+
+        if (agree) signUp(email, fullname, password, addr, phone);
+        else {
+            setToast(true)
+            setMsg("Pls agree to the Terms & Conditions, Privacy Policy and Cookie Policy")
         }
     };
+
+    const handleClose = (
+        event?: React.SyntheticEvent | Event,
+        reason?: SnackbarCloseReason,
+    ) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setToast(false);
+    }
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -172,8 +184,9 @@ export default function SignUp() {
                                 </Grid>
                                 <Grid item xs={12}>
                                     <FormControlLabel
-                                        control={<Checkbox value="allowExtraEmails" color="primary" />}
+                                        control={<Checkbox value="on" color="primary" />}
                                         label="I agree to the Terms and Conditions, Privacy Policy, and Cookie Policy"
+                                        name='agree'
                                     />
                                 </Grid>
                             </Grid>
@@ -197,6 +210,14 @@ export default function SignUp() {
                     <Copyright sx={{ mt: 5, mb: 4 }} />
                 </Container>
             </Box>
+            <Snackbar open={toast} autoHideDuration={4000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+                <Alert onClose={handleClose}
+                    severity="error"
+                    variant="filled"
+                    sx={{ width: '100%' }}>
+                    {msg}
+                </Alert>
+            </Snackbar>
         </ThemeProvider>
     );
 }

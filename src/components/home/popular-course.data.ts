@@ -7,7 +7,6 @@ export const data: Array<Course> = [
     title: 'Lesson Planning',
     rating: 5,
     ratingCount: 8,
-    price: 25,
     category: 'Beginner',
   },
   {
@@ -16,7 +15,6 @@ export const data: Array<Course> = [
     title: 'Quiz',
     rating: 5,
     ratingCount: 15,
-    price: 20,
     category: 'Intermediate',
   },
   {
@@ -25,7 +23,6 @@ export const data: Array<Course> = [
     title: 'Automated Essay Scoring and Feedback',
     rating: 4,
     ratingCount: 7,
-    price: 30,
     category: 'Beginner',
   },
   {
@@ -34,7 +31,6 @@ export const data: Array<Course> = [
     title: 'Maths Quiz',
     rating: 4,
     ratingCount: 12,
-    price: 30,
     category: 'Intermediate',
   },
   {
@@ -43,7 +39,6 @@ export const data: Array<Course> = [
     title: 'Math Lesson Planner',
     rating: 4,
     ratingCount: 32,
-    price: 35,
     category: 'Intermediate',
   },
   {
@@ -52,7 +47,6 @@ export const data: Array<Course> = [
     title: 'Video to notes',
     rating: 5,
     ratingCount: 14,
-    price: 35,
     category: 'Beginner',
   },
   {
@@ -61,7 +55,6 @@ export const data: Array<Course> = [
     title: 'Video to Quiz Bot',
     rating: 4,
     ratingCount: 6,
-    price: 25,
     category: 'Beginner',
   },
   {
@@ -70,7 +63,6 @@ export const data: Array<Course> = [
     title: 'Detect AI-Writing & Plagiarism',
     rating: 5,
     ratingCount: 8,
-    price: 25,
     category: 'Beginner',
   },
   {
@@ -79,7 +71,6 @@ export const data: Array<Course> = [
     title: 'PowerPoint Presentation',
     rating: 5,
     ratingCount: 15,
-    price: 20,
     category: 'Intermediate',
   },
   {
@@ -88,7 +79,6 @@ export const data: Array<Course> = [
     title: 'Reports Generator',
     rating: 4,
     ratingCount: 7,
-    price: 30,
     category: 'Beginner',
   },
   {
@@ -97,7 +87,6 @@ export const data: Array<Course> = [
     title: 'ESL Activity Suggestion',
     rating: 4,
     ratingCount: 12,
-    price: 30,
     category: 'Intermediate',
   },
   {
@@ -106,7 +95,6 @@ export const data: Array<Course> = [
     title: 'Document & Web Link Quiz',
     rating: 4,
     ratingCount: 32,
-    price: 35,
     category: 'Intermediate',
   },
   {
@@ -115,7 +103,6 @@ export const data: Array<Course> = [
     title: 'Homework Assignment Creator',
     rating: 5,
     ratingCount: 14,
-    price: 35,
     category: 'Beginner',
   },
   {
@@ -124,7 +111,6 @@ export const data: Array<Course> = [
     title: 'Test Creator',
     rating: 4,
     ratingCount: 6,
-    price: 25,
     category: 'Beginner',
   },
   {
@@ -133,7 +119,6 @@ export const data: Array<Course> = [
     title: 'Classroom Icebreaker Ideas',
     rating: 4,
     ratingCount: 6,
-    price: 25,
     category: 'Beginner',
   }
 ]

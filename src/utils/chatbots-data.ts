@@ -1,4 +1,4 @@
-import { ChatbotItem } from "@/interfaces/chatbot"
+import { Category, ChatbotItem } from "@/interfaces/chatbot"
 
 export const chatbots_items: Array<ChatbotItem> = [
     {
@@ -121,4 +121,12 @@ export const chatbots_items: Array<ChatbotItem> = [
         text: 'Access a repository of engaging icebreaker activities, tailored for educators and teachers based on class specifics and learning objectives.',
         category: 'Student Engagement & Activity Ideas'
     },
+]
+
+export const categories: Category[] = [
+    { title: "Lesson Planning", description: "With our AI teachers, lesson planning is effortless. Just give us the topic, and we'll generate engaging lesson plans, activities, and worksheets. Spend less time on research and design, and more on delivering impactful instruction. Experience the revolution in lesson planning with AI." },
+    { title: "Student Engagement & Activity Ideas", description: "With our AI teachers, special education and English as a second language (ESL) instruction are revolutionized. These intelligent bots provide personalized support and resources to meet the unique needs of students in these areas. With our AI teachers, educators gain access to specialized strategies, adaptive materials, and personalized interventions, enhancing their ability to support students with special education requirements or those learning English as a second language. Leveraging AI technology, special education and ESL instruction become more effective and accessible, ensuring every student receives the necessary support for academic success." },
+    { title: "Assessment & Progress Monitoring", description: "With our AI teachers, assessment and progress monitoring are transformed. These advanced bots offer efficient and accurate assessment tools, automated grading systems, and personalized feedback. Educators can track student progress effectively and make data-driven decisions to support growth. Embrace the power of AI teachers for streamlined assessment and monitoring of progress." },
+    { title: "Digital Learning & Teaching Tools", description: "Our AI teachers revolutionize digital learning and teaching tools. With their advanced capabilities, educators gain access to a wide range of interactive resources and platforms. From virtual simulations to personalized learning tools, AI teachers enhance engagement and cater to diverse learning needs. Experience the transformative power of AI in education." },
+    { title: "Communication & Professional Learning", description: "AI teachers also greatly benefit communication and professional learning. These intelligent bots facilitate seamless collaboration among educators, eliminating communication barriers and enabling efficient sharing of ideas and resources. Additionally, AI-powered platforms offer personalized professional development opportunities, providing tailored learning materials and insights for continuous growth. With these AI teachers, educators can enhance communication channels and engage in targeted professional learning, fostering a culture of collaboration and ongoing professional advancement." }
 ]

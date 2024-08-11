@@ -28,3 +28,8 @@ export interface AIWritingDetectChatbotProps {
     detect: boolean;
     plag: boolean;
 }
+
+export interface Category {
+    title: string,
+    description: string
+}

@@ -1,4 +1,4 @@
-import { Grid, Typography } from "@mui/material";
+import { Alert, Grid, Snackbar, SnackbarCloseReason, Typography } from "@mui/material";
 import React, { FC, useEffect, useState } from "react";
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -15,6 +15,7 @@ import Checkbox from '@mui/material/Checkbox';
 import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip'
 import { serverUrl } from "@/config/development";
+import { useAuthContext } from "@/contexts/auth-context";
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -96,6 +97,16 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
     const [selectedFile, setSelectedFile] = useState<any>(null);
     const [content, setContent] = useState<any>('');
     const [contentCount, setContentCount] = useState<any>(0)
+    const [toast, setToast] = useState<boolean>(false);
+    const [msg, setMsg] = useState<string>("");
+    const auth = useAuthContext();
+
+    if (!auth) {
+        // process the context if the auth is null;
+        throw new Error("Occured error to get context")
+    }
+
+    const { makingQuiz } = auth;
 
     const maxWords = 1000;
 
@@ -269,41 +280,47 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
         }
 
         try {
-            if (detect) {
-                // setLoading(true)
-                const res: any = await fetch(`${serverUrl}/chatbot/detectai`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        body: data
-                    }),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem("teachai_token")}`
-                    }
-                })
-                const res_data = await res.json();
-                const rlt = res_data.answer.originalityai
-                setDetect(true);
-                setDetectAnswer(rlt)
-            }
+            //
+            makingQuiz().then(async (rlt) => {
+                if (detect) {
+                    // setLoading(true)
+                    const res: any = await fetch(`${serverUrl}/chatbot/detectai`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            body: data
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem("teachai_token")}`
+                        }
+                    })
+                    const res_data = await res.json();
+                    const rlt = res_data.answer.originalityai
+                    setDetect(true);
+                    setDetectAnswer(rlt)
+                }
 
-            if (plag) {
-                // setLoading(true)
-                const res: any = await fetch(`${serverUrl}/chatbot/plagirism`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        body: data
-                    }),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem("teachai_token")}`
-                    }
-                })
-                const res_data = await res.json();
-                const rlt = res_data.answer.winstonai
-                setPlag(true);
-                setPlagAnswer(rlt)
-            }
+                if (plag) {
+                    // setLoading(true)
+                    const res: any = await fetch(`${serverUrl}/chatbot/plagirism`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            body: data
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem("teachai_token")}`
+                        }
+                    })
+                    const res_data = await res.json();
+                    const rlt = res_data.answer.winstonai
+                    setPlag(true);
+                    setPlagAnswer(rlt)
+                }
+            }).catch(err => {
+                setToast(true)
+                setMsg("You got some error!")
+            })
         } catch (error: any) {
             console.log(error)
             // alert('Error While detecting your content')
@@ -312,6 +329,17 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
             }
         }
 
+    }
+
+    const handleClose = (
+        event?: React.SyntheticEvent | Event,
+        reason?: SnackbarCloseReason,
+    ) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setToast(false);
     }
 
     return (<Grid item sm={12} md={5} lg={4} style={{ background: '#fff', padding: 30 }}>
@@ -381,6 +409,14 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
         <Box sx={{ marginTop: 3, marginBottom: 2 }}>
             <Button variant='contained' color='success' onClick={handleSubmit}>Generate</Button>
         </Box>
+        <Snackbar open={toast} autoHideDuration={4000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+            <Alert onClose={handleClose}
+                severity="error"
+                variant="filled"
+                sx={{ width: '100%' }}>
+                {msg}
+            </Alert>
+        </Snackbar>
     </Grid>)
 }
 
