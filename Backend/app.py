@@ -32,6 +32,7 @@ import jwt
 import datetime
 import time
 from pymongo import MongoClient
+import stripe
 
 def page_not_found(e):
   return render_template('404.html'), 404
@@ -43,11 +44,22 @@ app.config.from_object(config.config['development'])
 
 app.register_error_handler(404, page_not_found)
 
+stripe.api_key = config.DevelopmentConfig.STRIPE_SECRET_KEY
 client = OpenAI(api_key=config.DevelopmentConfig.OPENAI_KEY)
+site_url = config.DevelopmentConfig.SITE_URL
+webhook_url = config.DevelopmentConfig.WEBHOOK_ENDPOINT
 
 # connect to mongodb
 mongo_client = MongoClient(host="mongodb://127.0.0.1", port=27017)
 db = mongo_client['assistman']
+
+def createWebhookEndpoints():
+    try:
+        stripe.WebhookEndpoint.create(url=webhook_url, enabled_events=[
+            '*'
+        ])
+    except Exception as ex:
+        print(ex)
 
 def authenticate(request):
     # Retrieve the JWT token from the 'Authorization' header
@@ -479,6 +491,9 @@ def signupUser():
         password = body['password']
         addr = body['addr']
         phone = body['phone']
+
+        if len(name.strip()) == 0 or len(password) < 8 or len(email) == 0:
+            return Response("Invalid value", status=414)
         
         # checking the new user and insert one.
         user_collection = db['users']
@@ -487,7 +502,7 @@ def signupUser():
 
         if person is not None:
             print("The user who has the email already exists.")
-            return Response("Already exist!", status=404)
+            return Response("Already exist!", status=414)
         else:
             # return jsonify({'result', 'result'})
             result = user_collection.insert_one({'fullname': name, 'email': email, 'password': password, 'addr': addr, 'phone': phone})
@@ -515,7 +530,87 @@ def getUserState():
 def upgradingPlan():
     body = request.get_json()
     plan = body['plan']
-    return jsonify({ "payUrl": "https://mui.com" }), 200
+    email = body['email']
+    customer = stripe.Customer.create(metadata={
+        'plan': json.dumps(plan),
+        'email': email
+    })
+    try:
+        session = stripe.checkout.Session.create(
+            customer=customer.id,
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "unit_amount": 999,
+                    "product_data": {
+                        "name": plan['title']
+                    }
+                },
+                "quantity": 1
+            }],
+            payment_method_types=['card'],
+            mode="payment",
+            success_url=f"{site_url}/success",
+            cancel_url=f"{site_url}/cancel"
+        )
+        return jsonify({ "payUrl": session.url }), 200
+    except Exception as ex:
+        print(ex)
+        return jsonify({ "msg": "error!" }), 500
+
+@app.route("/api/stripe/webhook", methods=['POST'])
+def processWebhook():
+    event = request.get_json()
+    eType = event['type']
+    
+    if eType == 'invoice.payment_succeeded':
+        print("invoice.payment_succeeded")
+        dataObject = event['data']['object']
+        if dataObject['billing_reason'] == 'subscription_create':
+            subscription_id = dataObject['subscription']
+            payment_intent_id = dataObject['payment_intent']
+            
+            print(f"subscription id: {subscription_id}")
+    elif eType == 'invoice.finalized':
+        print("invoice.finalized")
+    elif eType == 'invoice.payment_failed':
+        print('invoice.payment_failed')
+    elif eType == 'customer.subscription.deleted':
+        print("customer.subscription.deleted")
+    elif eType == 'payment_intent.succeeded':
+        print("payment_intent.succeeded")
+    elif eType == 'payment_method.attached':
+        print("payment_method.attached")
+    elif eType == 'checkout.session.completed': 
+        print('checkout.session.completed')
+        checkoutSessionCompleted = event['data']['object']
+        customer = stripe.Customer.retrieve(checkoutSessionCompleted['customer'])
+        user_email = customer.metadata['email']
+        plan = json.loads(customer.metadata['plan'])
+        print("customer email: ", user_email)
+        print("customer plan: ", plan)
+        
+        current = 0
+        limit = 0
+        if plan['title'] == 'Starter':
+            current = 0
+            limit = 20
+        elif plan['title'] == 'Professional':
+            current = 0
+            limit = 50
+        else:
+            current = 0
+            limit = 5
+        
+        current_date = datetime.date.today()
+        chat_collection = db['chat']
+        updated_plan = chat_collection.update_one({ "email": user_email }, { "$set": { "plan": plan['title'], "current": current, "limit": limit, 'lastUpdate': f"{current_date.year}-{current_date.month}-{current_date.day}" } })
+        print(f"Server upgraded your plan with {plan['title']}")
+    else:
+        print("specific event: ", eType)
+
+    return jsonify({ "received": True }), 200
 
 if __name__ == '__main__':
+    createWebhookEndpoints()
     app.run(debug=False, host='0.0.0.0', port='5000')

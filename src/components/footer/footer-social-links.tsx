@@ -6,17 +6,17 @@ import { SocialLink } from '@/interfaces/social-link'
 export const socialLinks: SocialLink[] = [
   {
     name: 'Instagram',
-    link: '#',
+    link: 'https://www.instagram.com',
     icon: '/images/icons/instagram.svg',
   },
   {
     name: 'YouTube',
-    link: '#',
+    link: 'https://www.youtube.com',
     icon: '/images/icons/youtube.svg',
   },
   {
     name: 'Twitter',
-    link: '#',
+    link: 'https://x.com',
     icon: '/images/icons/twitter.svg',
   }
 ]

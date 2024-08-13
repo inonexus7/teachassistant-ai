@@ -61,7 +61,7 @@ const Price: FC = () => {
         throw new Error("auth provide error")
     }
 
-    const { plan } = auth;
+    const { plan, user, isAuthenticated } = auth;
 
     useEffect(() => {
         const current = plan == 'Free' ? 0 : plan == 'Starter' ? 1 : 2
@@ -73,9 +73,14 @@ const Price: FC = () => {
             // clicking current plan and skip it
             return false;
         }
+        if (!isAuthenticated) {
+            setToast(true)
+            setMsg("You should login first before upgrading your plan!")
+            return false;
+        }
         // process upgrading plan
         try {
-            const rlt = await axiosApi.post("/upgradingPlan", { plan });
+            const rlt = await axiosApi.post("/upgradingPlan", { plan, email: user.email });
             const pay_url = rlt.data.payUrl;
             window.open(pay_url, '_blank');
         } catch (err) {
@@ -121,7 +126,7 @@ const Price: FC = () => {
             </Box>
             <Box sx={{ display: { xs: 'block', sm: 'block', md: 'flex' }, justifyContent: 'center', marginBottom: 8 }}>
                 {
-                    plans.map((item, i) => (<Box onClick={() => handlePlan(item, i)} className="plan_item" key={`plan_${i}`} sx={{ backgroundColor: '#ffffff', margin: 3, minHeight: 550, minWidth: 400, padding: 3 }}>
+                    plans.map((item, i) => (<Box onClick={() => i > 0 && handlePlan(item, i)} className="plan_item" key={`plan_${i}`} sx={{ backgroundColor: '#ffffff', margin: 3, minHeight: 550, minWidth: 400, padding: 3 }}>
                         {currentPlan == i && <div className="currentPlan"></div>}
                         <Box sx={{ textAlign: 'center', paddingTop: 3 }}>
                             <Typography sx={{ fontSize: '1.5rem', fontWeight: 600 }}>{item.title}</Typography>
