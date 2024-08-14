@@ -1,5 +1,5 @@
 import { Alert, Grid, Snackbar, SnackbarCloseReason, Typography } from "@mui/material";
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useState } from "react";
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import TextField from "@mui/material/TextField";
@@ -8,7 +8,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
 import { ChatbotItem, AIWritingDetectChatbotProps } from "@/interfaces/chatbot";
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
@@ -16,6 +16,7 @@ import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip'
 import { serverUrl } from "@/config/development";
 import { useAuthContext } from "@/contexts/auth-context";
+import Image from "next/image";
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -32,7 +33,7 @@ const VisuallyHiddenInput = styled('input')({
 const pdfjsLib: any = require('pdfjs-dist/webpack');
 const Tesseract: any = require('tesseract.js');
 
-function convertPdfToImagesAndReadText(file: File) {
+function convertPdfToImagesAndReadText(file: File): any {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function () {
@@ -110,7 +111,7 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
 
     const maxWords = 1000;
 
-    const handleChange = (e: any) => {
+    const handleChange = (e: any): void => {
         const { name, value } = e.target
 
         setData({
@@ -128,7 +129,7 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
         category: 'Assessment & Progress Monitoring'
     }
 
-    const handleFileChange = async (e: any) => {
+    const handleFileChange = async (e: any): Promise<void> => {
         setSelectedFile(e.target.files[0]);
         const file = e.target.files[0]
         let text = ''
@@ -163,7 +164,7 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
 
                 await convertPdfToImagesAndReadText(file).then(function (textArray: any) {
                     extractedText = textArray[0]
-                }).catch(function (error) {
+                }).catch(function (error: any) {
                     console.error(error);
                 });
             }
@@ -191,7 +192,7 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
                     setContentCount(1000)
                     let words = text.split(' ')
                     words = words.splice(0, maxWords);
-                    let thaosandStr = words.join(' ')
+                    const thaosandStr = words.join(' ')
                     setContent(thaosandStr);
                     handleChange({ target: { name, value: thaosandStr } })
                 }
@@ -215,7 +216,7 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
                     setContentCount(1000)
                     let words = textContent.split(' ')
                     words = words.splice(0, maxWords);
-                    let thaosandStr = words.join(' ')
+                    const thaosandStr = words.join(' ')
                     setContent(thaosandStr);
                     handleChange({ target: { name, value: thaosandStr } })
                 }
@@ -235,18 +236,19 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
             setContentCount(1000)
             let words = text.split(' ')
             words = words.splice(0, maxWords);
-            let thaosandStr = words.join(' ')
+            const thaosandStr = words.join(' ')
             setContent(thaosandStr);
             handleChange({ target: { name, value: thaosandStr } })
         }
+        return;
     };
 
-    const countWords = (text: string) => {
-        let tt = text.split(' ');
+    const countWords = (text: string): number => {
+        const tt = text.split(' ');
         return tt.length;
     };
 
-    const handleTextAreaChange = (e: any, fn: any, setCount: any) => {
+    const handleTextAreaChange = (e: any, fn: any, setCount: any): void => {
 
         const { name } = e.target;
         const inputText = e.target.value;
@@ -261,13 +263,14 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
             setCount(1000)
             const words = inputText.split(' ');
             const newWords = words.splice(0, maxWords);
-            let thaosandStr = newWords.join(' ')
+            const thaosandStr = newWords.join(' ')
             fn(thaosandStr);
             handleChange({ target: { name, value: thaosandStr } })
         }
+        return;
     };
 
-    const handleSubmit = async (e: any) => {
+    const handleSubmit = async (): Promise<boolean> => {
 
         if (Object.keys(data).length < 2) {
             return false;
@@ -276,12 +279,12 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
         clearAnswer()
         if (!detect && !plag) {
             alert("Select the options SetectAI/Plagirism")
-            return;
+            return false;
         }
 
         try {
             //
-            makingQuiz().then(async (rlt) => {
+            makingQuiz().then(async () => {
                 if (detect) {
                     // setLoading(true)
                     const res: any = await fetch(`${serverUrl}/chatbot/detectai`, {
@@ -317,16 +320,18 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
                     setPlag(true);
                     setPlagAnswer(rlt)
                 }
-            }).catch(err => {
+            }).catch(() => {
                 setToast(true)
                 setMsg("You got some error!")
             })
+            return true;
         } catch (error: any) {
             console.log(error)
             // alert('Error While detecting your content')
             if (error?.response?.status === 429) {
                 alert(error?.response?.data?.error)
             }
+            return false;
         }
 
     }
@@ -334,7 +339,7 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
     const handleClose = (
         event?: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
-    ) => {
+    ): void => {
         if (reason === 'clickaway') {
             return;
         }
@@ -344,7 +349,7 @@ const AIWritingDetect: FC<AIWritingDetectChatbotProps> = ({ detect, plag, clearA
 
     return (<Grid item sm={12} md={5} lg={4} style={{ background: '#fff', padding: 30 }}>
         <Box sx={{ display: 'flex', alignItems: 'end' }}>
-            <img src={bot.cover} width={70} height={70} alt='bot_avatar' />
+            <Image src={bot.cover} width={70} height={70} alt='bot_avatar' />
             <Typography style={{ marginLeft: 5, fontSize: 22 }}>{bot.admin}</Typography>
         </Box>
         <Box style={{ borderBottom: '1px solid #333', padding: '5px 0' }}>

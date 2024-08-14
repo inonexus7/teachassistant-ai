@@ -10,7 +10,7 @@ interface Props {
 const Logo: FC<Props> = ({ onClick, variant }) => {
   return (
     <Box onClick={onClick}>
-      <Link href={`/`}>
+      <Link href={`/`} passHref={true}>
         <Typography
           variant="h4"
           component="h1"

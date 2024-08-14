@@ -49,7 +49,7 @@ const Home: FC = () => {
     return () => {
       timerRefs.forEach((timerId: any) => clearTimeout(timerId));
     };
-  })
+  }, [])
 
   return (
     <Grid container spacing={2}>

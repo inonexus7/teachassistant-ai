@@ -1,5 +1,5 @@
 import { Alert, Grid, Snackbar, SnackbarCloseReason, Typography } from "@mui/material";
-import React, { ChangeEvent, FC, useState } from "react";
+import React, { FC, useState } from "react";
 import Box from '@mui/material/Box';
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
@@ -10,12 +10,12 @@ import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import { ChatbotItem, ChatbotProps } from "@/interfaces/chatbot";
+import Select from '@mui/material/Select';
+import { ChatbotItem } from "@/interfaces/chatbot";
 import { serverUrl } from "@/config/development";
 import { useAuthContext } from "@/contexts/auth-context";
 
-const Presentation: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
+const Presentation: FC = () => {
     const [data, setData] = useState({ lang: "English", number_of_slides: 3, insert_image: 'simple' })
     const [toast, setToast] = useState<boolean>(false);
     const [msg, setMsg] = useState<string>("");
@@ -28,7 +28,7 @@ const Presentation: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
 
     const { makingQuiz } = auth;
 
-    const handleChange = (e: any) => {
+    const handleChange = (e: any): void => {
         const { name, value } = e.target
 
         setData({
@@ -37,14 +37,14 @@ const Presentation: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
         })
     };
 
-    const handleGenerate = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleGenerate = async (): Promise<boolean> => {
         if (Object.keys(data).length < 6) {
             return false;
         } else {
             // clearAnswer()
             try {
                 // upgrading chat history
-                makingQuiz().then(async (rlt) => {
+                makingQuiz().then(async () => {
                     const response: any = await fetch(`${serverUrl}/chatbot/powerpoint`, {
                         method: 'POST',
                         headers: {
@@ -73,7 +73,7 @@ const Presentation: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
                         alert("something went wrong")
                         // Handle any errors from the request
                     }
-                }).catch(err => {
+                }).catch(() => {
                     setToast(true)
                     setMsg("You got some error!")
                 })
@@ -86,12 +86,13 @@ const Presentation: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
                 // Handle any network or other errors
             }
         }
+        return true;
     }
 
     const handleClose = (
         event?: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
-    ) => {
+    ): void => {
         if (reason === 'clickaway') {
             return;
         }

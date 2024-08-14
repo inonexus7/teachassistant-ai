@@ -21,7 +21,7 @@ interface Props {
 const ChatbotItemCard: FC<Props> = ({ payload }) => {
     const router: NextRouter = useRouter()
 
-    const goToChatbot = () => {
+    const goToChatbot = (): void => {
         const data: ChatbotItem = payload
         router.push({
             pathname: '/chatbot',
@@ -47,7 +47,7 @@ const ChatbotItemCard: FC<Props> = ({ payload }) => {
                     flexDirection: 'row',
                     width: '100%'
                 }}>
-                    <img style={{ borderRadius: 5 }} src={payload.cover} width={70} height={70} alt={`chatbot_listitem_${payload.id}`} />
+                    <img style={{ borderRadius: 5 }} width={70} height={70} src={payload.cover} alt={`chatbot_listitem_${payload.id}`} />
                     <Box sx={{ paddingX: 2, textAlign: 'left' }}>
                         <h2 style={{ margin: 0 }}>{payload.title}</h2>
                         <p style={{ fontSize: 20, margin: 0 }}>{payload.admin}</p>

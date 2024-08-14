@@ -1,13 +1,13 @@
 <h1 align="center">
-  <a href="https://github.com/hiriski/coursespace-landing-page">
-  Coursespace - React Online Course Landing Page
+  <a href="https://github.com/mpetrovic86119">
+  TeachAssist - Nextjs Online Course Landing Page
   </a>
   <br />
 </h1>
 
-![screenshot](public/images/image_processing20220419-31825-1yzr3x9.png)
+![screenshot](public/images/readme_preview.png)
 
-**Coursespace** is a free landing page template built on top of Material UI and fully coded in **React**.
+**Teachassist** is a free landing page template built on top of Material UI and fully coded in **React**.
 Simple & light is designed to provide all the basic components using the `sx` prop for a developer need to create landing page for Online Course product.
 
 ## Live Demo
@@ -43,6 +43,16 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
 
+## How to use it
+
+- Run `npm run dev` in root folder
+- Run `python app.py` in backend folder
+- Run `stripe login --interactive` and then `stripe listen --forward-to localhost:your_port/your_urlpattern`
+
+**Remember**
+You'd better run this backend in virtual environment of python (in this case, venv folder).
+And you don't need to run stripe cli if it is running on domain.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
@@ -56,13 +66,3 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 - [MUI](https://mui.com/)
 - [React Slick](https://github.com/akiran/react-slick)
 
-<h6>
-  <br />
-  <p>
-   <a href="https://dribbble.com/naiflaramadhan"><img src="https://cdn.dribbble.com/users/5147050/avatars/normal/cd7b217b7d0cde417ef7d64ac123363d.png" alt="Alfian Ramadhan" width="52" height="52"></a>
-  </p>
-  <p>
-  Designed by
-  <p> 
-  <a href="https://dribbble.com/naiflaramadhan">Alfian Ramadhan</a>
-</h6>

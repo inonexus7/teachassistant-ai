@@ -1,4 +1,4 @@
-import { Grid, Typography } from "@mui/material";
+import { Alert, Grid, Snackbar, SnackbarCloseReason, Typography } from "@mui/material";
 import React, { FC, useState } from "react";
 import Box from '@mui/material/Box';
 import TextField from "@mui/material/TextField";
@@ -6,7 +6,7 @@ import Button from "@mui/material/Button";
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
 import { ChatbotItem, ChatbotProps } from "@/interfaces/chatbot";
 import { serverUrl } from "@/config/development";
 import { useAuthContext } from "@/contexts/auth-context";
@@ -24,7 +24,7 @@ const QUIZ: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
     const { makingQuiz } = auth;
 
-    const handleChange = (e: any) => {
+    const handleChange = (e: any): void => {
         const { name, value } = e.target
 
         setData({
@@ -42,15 +42,25 @@ const QUIZ: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
         category: 'Student Engagement & Activity Ideas'
     }
 
-    const handleGenerate = async (e: React.MouseEvent<HTMLButtonElement>) => {
-        console.log(data)
+    const handleClose = (
+        event?: React.SyntheticEvent | Event,
+        reason?: SnackbarCloseReason,
+    ): void => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setToast(false);
+    }
+
+    const handleGenerate = async (): Promise<boolean> => {
         if (Object.keys(data).length < 6) {
             return false;
         } else {
             clearAnswer()
             try {
                 // upgrading chat history
-                makingQuiz().then(async (rlt) => {
+                makingQuiz().then(async () => {
                     const response: any = await fetch(`${serverUrl}/chatbot/quiz`, {
                         method: 'POST',
                         headers: {
@@ -66,11 +76,8 @@ const QUIZ: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                     // Check if the response is successful (status code 200)
                     if (response.status === 200) {
                         const reader = response.body.getReader();
-                        let receivedChunks = [];
 
-                        let answer = '';
-
-                        const read = async () => {
+                        const read = async (): Promise<void> => {
                             const { done, value } = await reader.read();
 
                             if (done) {
@@ -116,7 +123,7 @@ const QUIZ: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                                 });
 
                                 let newStr = replacedString.replace(/[\[(]http[^\])]+[\])]/g, (match) => {
-                                    let string = match.replace(/[\[\]()]/g, '')
+                                    const string = match.replace(/[\[\]()]/g, '')
                                     return string
                                 })
 
@@ -130,7 +137,6 @@ const QUIZ: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                                 text = newStr.replace(/```html|```/g, '')
                                 // text = newStr.replace(/\n/g, '<br />');
                                 // text = newStr.replace("<br/>", "")
-                                answer += text;
                                 setAnswer(text)
                                 // console.log('Received chunk:', text);
 
@@ -146,7 +152,7 @@ const QUIZ: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                         alert("something went wrong")
                         // Handle any errors from the request
                     }
-                }).catch(err => {
+                }).catch(() => {
                     setToast(true)
                     setMsg("You got some error!")
                 })
@@ -160,6 +166,7 @@ const QUIZ: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                 // Handle any network or other errors
             }
         }
+        return true;
     }
 
     return (<Grid item sm={12} md={5} lg={4} style={{ background: '#fff', padding: 30 }}>
@@ -223,6 +230,14 @@ const QUIZ: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
         <Box sx={{ marginTop: 3, marginBottom: 2 }}>
             <Button variant='contained' color='success' onClick={handleGenerate}>Generate</Button>
         </Box>
+        <Snackbar open={toast} autoHideDuration={4000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+            <Alert onClose={handleClose}
+                severity="error"
+                variant="filled"
+                sx={{ width: '100%' }}>
+                {msg}
+            </Alert>
+        </Snackbar>
     </Grid>)
 }
 

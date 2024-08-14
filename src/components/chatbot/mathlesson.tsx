@@ -6,7 +6,7 @@ import Button from "@mui/material/Button";
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
 import { ChatbotItem, ChatbotProps } from "@/interfaces/chatbot";
 import { serverUrl } from "@/config/development";
 import { useAuthContext } from "@/contexts/auth-context";
@@ -24,7 +24,7 @@ const MathLesson: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
     const { makingQuiz } = auth;
 
-    const handleChange = (e: any) => {
+    const handleChange = (e: any): void => {
         const { name, value } = e.target
 
         setData({
@@ -42,12 +42,12 @@ const MathLesson: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
         category: 'Lesson Planning'
     }
 
-    const handleGenerate = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleGenerate = async (): Promise<boolean> => {
         if (Object.keys(data).length < 5) {
             return false;
         } else {
             clearAnswer()
-            makingQuiz().then(async (rlt) => {
+            makingQuiz().then(async () => {
                 try {
                     // upgrading chat history
                     //
@@ -67,11 +67,8 @@ const MathLesson: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                     // Check if the response is successful (status code 200)
                     if (response.status === 200) {
                         const reader = response.body.getReader();
-                        let receivedChunks = [];
 
-                        let answer = '';
-
-                        const read = async () => {
+                        const read = async (): Promise<void> => {
                             const { done, value } = await reader.read();
 
                             if (done) {
@@ -117,7 +114,7 @@ const MathLesson: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                                 });
 
                                 let newStr = replacedString.replace(/[\[(]http[^\])]+[\])]/g, (match) => {
-                                    let string = match.replace(/[\[\]()]/g, '')
+                                    const string = match.replace(/[\[\]()]/g, '')
                                     return string
                                 })
 
@@ -131,7 +128,6 @@ const MathLesson: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                                 text = newStr.replace(/```html|```/g, '')
                                 // text = newStr.replace(/\n/g, '<br />');
                                 // text = newStr.replace("<br/>", "")
-                                answer += text;
                                 setAnswer(text)
                                 // console.log('Received chunk:', text);
 
@@ -156,17 +152,18 @@ const MathLesson: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                     console.log('Error: ', error);
                     // Handle any network or other errors
                 }
-            }).catch(err => {
+            }).catch(() => {
                 setToast(true)
                 setMsg("You got some error!")
             })
         }
+        return true;
     }
 
     const handleClose = (
         event?: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
-    ) => {
+    ): void => {
         if (reason === 'clickaway') {
             return;
         }

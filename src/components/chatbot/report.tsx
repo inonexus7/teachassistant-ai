@@ -1,6 +1,5 @@
 import { Alert, Grid, Snackbar, SnackbarCloseReason, Typography } from "@mui/material";
 import React, { FC, useState } from "react";
-import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
@@ -29,7 +28,7 @@ const Report: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
     const { makingQuiz } = auth;
 
-    const handleChange = (e: any) => {
+    const handleChange = (e: any): void => {
         const { name, value } = e.target
 
         setData({
@@ -47,13 +46,13 @@ const Report: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
         category: 'Communication & Professional Learning'
     }
 
-    const handleSubmit = async (e: any) => {
+    const handleSubmit = async (): Promise<void> => {
 
         clearAnswer()
 
         try {
             // upgrading chat history
-            makingQuiz().then(async (rlt) => {
+            makingQuiz().then(async () => {
                 const response: any = await fetch(`${serverUrl}/chatbot/report/answer`, {
                     method: 'POST',
                     headers: {
@@ -70,11 +69,8 @@ const Report: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                 // Check if the response is successful (status code 200)
                 if (response.status === 200) {
                     const reader = response.body.getReader();
-                    let receivedChunks = [];
 
-                    let answer = '';
-
-                    const read = async () => {
+                    const read = async (): Promise<void> => {
                         const { done, value } = await reader.read();
 
                         if (done) {
@@ -120,7 +116,7 @@ const Report: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                             });
 
                             let newStr = replacedString.replace(/[\[(]http[^\])]+[\])]/g, (match) => {
-                                let string = match.replace(/[\[\]()]/g, '')
+                                const string = match.replace(/[\[\]()]/g, '')
                                 return string
                             })
 
@@ -133,7 +129,6 @@ const Report: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
                             text = newStr.replace(/```html|```/g, '')
                             // text = newStr.replace(/\n/g, '<br />');
-                            answer += text;
                             setAnswer(text)
                             // console.log('Received chunk:', text);
 
@@ -149,7 +144,7 @@ const Report: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                     alert("something went wrong")
                     // Handle any errors from the request
                 }
-            }).catch(err => {
+            }).catch(() => {
                 setToast(true)
                 setMsg("You got some error!")
             })
@@ -168,7 +163,7 @@ const Report: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
     const handleClose = (
         event?: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
-    ) => {
+    ): void => {
         if (reason === 'clickaway') {
             return;
         }

@@ -69,10 +69,10 @@ const HomeHero: FC = () => {
 
   const [openVideo, setOpenVideo] = React.useState(false);
 
-  const handleClickOpen = () => {
+  const handleClickOpen = (): void => {
     setOpenVideo(true);
   };
-  const handleVideoClose = () => {
+  const handleVideoClose = (): void => {
     setOpenVideo(false);
   };
 

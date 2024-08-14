@@ -12,13 +12,12 @@ import RadioGroup from '@mui/material/RadioGroup';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormLabel from '@mui/material/FormLabel';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
 import { ChatbotItem, ChatbotProps } from "@/interfaces/chatbot";
 import { serverUrl } from "@/config/development";
 import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip'
 import { useAuthContext } from "@/contexts/auth-context";
-
 const pdfjsLib: any = require('pdfjs-dist/webpack');
 const Tesseract: any = require('tesseract.js');
 
@@ -34,7 +33,7 @@ const VisuallyHiddenInput = styled('input')({
     width: 1,
 });
 
-function convertPdfToImagesAndReadText(file: File) {
+function convertPdfToImagesAndReadText(file: File): any {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function () {
@@ -110,7 +109,7 @@ const DocBot: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
     const maxWords = 1000;
 
-    const handleChange = (e: any) => {
+    const handleChange = (e: any): void => {
         const { name, value } = e.target
 
         setData({
@@ -119,13 +118,13 @@ const DocBot: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
         })
     };
 
-    const handleChangeDocType = (data: any) => {
+    const handleChangeDocType = (data: any): void => {
         const type = data.target.value
         if (type == 0) setDocType(false)
         else setDocType(true)
     }
 
-    const handleFileChange = async (e: any) => {
+    const handleFileChange = async (e: any): Promise<void> => {
         const file = e.target.files[0]
         let text = ''
         if (file === undefined) return
@@ -160,8 +159,6 @@ const DocBot: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
                 await convertPdfToImagesAndReadText(file).then(function (textArray: any) {
                     extractedText = textArray[0]
-                }).catch(function (error) {
-                    console.error(error);
                 });
             }
             text = extractedText
@@ -180,7 +177,7 @@ const DocBot: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
                 let words = text.split(' ')
                 words = words.splice(0, maxWords);
-                let thaosandStr = words.join(' ')
+                const thaosandStr = words.join(' ')
                 handleChange({ target: { name, value: thaosandStr } })
             }
             reader.readAsDataURL(e.target.files[0])
@@ -196,7 +193,7 @@ const DocBot: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                 // Trim the excess words
                 let words = textContent.split(' ')
                 words = words.splice(0, maxWords);
-                let thaosandStr = words.join(' ')
+                const thaosandStr = words.join(' ')
                 handleChange({ target: { name, value: thaosandStr } })
             }
             reader.readAsArrayBuffer(file);
@@ -206,7 +203,7 @@ const DocBot: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
         let words = text.split(' ')
         words = words.splice(0, maxWords);
-        let thaosandStr = words.join(' ')
+        const thaosandStr = words.join(' ')
         handleChange({ target: { name, value: thaosandStr } })
     };
 
@@ -219,14 +216,14 @@ const DocBot: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
         category: 'Student Engagement & Activity Ideas'
     }
 
-    const handleGenerate = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleGenerate = async (): Promise<boolean> => {
         console.log(data)
         if (Object.keys(data).length < 4) {
             return false;
         } else {
             clearAnswer()
             // upgrading chat history
-            makingQuiz().then(async (rlt) => {
+            makingQuiz().then(async () => {
                 try {
                     const response: any = await fetch(`${serverUrl}/chatbot/docurl/quiz`, {
                         method: 'POST',
@@ -243,11 +240,10 @@ const DocBot: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                     // Check if the response is successful (status code 200)
                     if (response.status === 200) {
                         const reader = response.body.getReader();
-                        let receivedChunks = [];
 
-                        let answer = '';
+                        // let answer = '';
 
-                        const read = async () => {
+                        const read = async (): Promise<void> => {
                             const { done, value } = await reader.read();
 
                             if (done) {
@@ -294,7 +290,7 @@ const DocBot: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                                 });
 
                                 let newStr = replacedString.replace(/[\[(]http[^\])]+[\])]/g, (match) => {
-                                    let string = match.replace(/[\[\]()]/g, '')
+                                    const string = match.replace(/[\[\]()]/g, '')
                                     return string
                                 })
 
@@ -308,7 +304,7 @@ const DocBot: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                                 text = newStr.replace(/```html|```/g, '')
                                 // text = newStr.replace(/\n/g, '<br />');
                                 // text = newStr.replace("<br/>", "")
-                                answer += text;
+                                // answer += text;
                                 setAnswer(text)
                                 // console.log('Received chunk:', text);
 
@@ -333,16 +329,17 @@ const DocBot: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                     console.log('Error: ', error);
                     // Handle any network or other errors
                 }
-            }).catch(err => {
+            }).catch(() => {
                 setToast(true)
                 setMsg("You got some error!")
             })
         }
+        return true;
     }
     const handleClose = (
         event?: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
-    ) => {
+    ): void => {
         if (reason === 'clickaway') {
             return;
         }

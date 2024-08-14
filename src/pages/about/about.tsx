@@ -2,7 +2,6 @@ import { MainLayout } from "@/components/layout";
 import { Category, ChatbotItem } from "@/interfaces/chatbot";
 import { categories, chatbots_items } from "@/utils/chatbots-data";
 import { Box, Typography, Grid } from "@mui/material";
-import Image from "next/image";
 import { FC } from "react";
 
 const About: FC = () => {
@@ -24,7 +23,7 @@ const About: FC = () => {
                                 filtered_bots.map((item: ChatbotItem, index: number) => <Grid item key={`bot_${category.title}_${index}`} xs={12} sm={6} md={4}>
                                     <Box sx={{ background: '#fff', padding: 3, borderRadius: 5, boxShadow: '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)' }}>
                                         <Box sx={{ display: 'flex' }}>
-                                            <Image src={item.cover} width={50} height={50} alt="bot_avatar_image" />
+                                            <img src={item.cover} width={70} height={70} alt="bot_avatar_image" />
                                             <Box sx={{ marginLeft: 5 }}>
                                                 <Typography sx={{ fontWeight: 600, fontSize: '1.2rem' }}>{item.title}</Typography>
                                                 <Typography sx={{ fontSize: '1.2rem' }}>{item.admin}</Typography>

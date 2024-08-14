@@ -8,7 +8,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
 import { ChatbotItem, ChatbotProps } from "@/interfaces/chatbot";
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
@@ -32,7 +32,7 @@ const VisuallyHiddenInput = styled('input')({
 const pdfjsLib: any = require('pdfjs-dist/webpack');
 const Tesseract: any = require('tesseract.js');
 
-function convertPdfToImagesAndReadText(file: File) {
+function convertPdfToImagesAndReadText(file: File): Promise<any> {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function () {
@@ -115,7 +115,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
     const maxWords = 1000;
 
-    const handleChange = (e: any) => {
+    const handleChange = (e: any): void => {
         const { name, value } = e.target
 
         setData({
@@ -133,7 +133,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
         category: 'Assessment & Progress Monitoring'
     }
 
-    const handleFileChange = async (e: any) => {
+    const handleFileChange = async (e: any): Promise<void> => {
         setSelectedFile(e.target.files[0]);
         const file = e.target.files[0]
         let text = ''
@@ -169,9 +169,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
                 await convertPdfToImagesAndReadText(file).then(function (textArray: any) {
                     extractedText = textArray[0]
-                }).catch(function (error) {
-                    console.error(error);
-                });
+                })
             }
             text = extractedText
         }
@@ -197,7 +195,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                     setContentCount(1000)
                     let words = text.split(' ')
                     words = words.splice(0, maxWords);
-                    let thaosandStr = words.join(' ')
+                    const thaosandStr = words.join(' ')
                     setContent(thaosandStr);
                     handleChange({ target: { name, value: thaosandStr } })
                 }
@@ -222,7 +220,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                     setContentCount(1000)
                     let words = textContent.split(' ')
                     words = words.splice(0, maxWords);
-                    let thaosandStr = words.join(' ')
+                    const thaosandStr = words.join(' ')
                     setContent(thaosandStr);
                     handleChange({ target: { name, value: thaosandStr } })
                 }
@@ -242,18 +240,18 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
             setContentCount(1000)
             let words = text.split(' ')
             words = words.splice(0, maxWords);
-            let thaosandStr = words.join(' ')
+            const thaosandStr = words.join(' ')
             setContent(thaosandStr);
             handleChange({ target: { name, value: thaosandStr } })
         }
     };
 
-    const countWords = (text: string) => {
-        let tt = text.split(' ');
+    const countWords = (text: string): number => {
+        const tt = text.split(' ');
         return tt.length;
     };
 
-    const handleTextAreaChange = (e: any, fn: any, setCount: any) => {
+    const handleTextAreaChange = (e: any, fn: any, setCount: any): void => {
 
         const { name } = e.target;
         const inputText = e.target.value;
@@ -268,13 +266,13 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
             setCount(1000)
             const words = inputText.split(' ');
             const newWords = words.splice(0, maxWords);
-            let thaosandStr = newWords.join(' ')
+            const thaosandStr = newWords.join(' ')
             fn(thaosandStr);
             handleChange({ target: { name, value: thaosandStr } })
         }
     };
 
-    const handleSubmit = async (e: any) => {
+    const handleSubmit = async (): Promise<void> => {
 
         clearAnswer()
         let fileMB = 0
@@ -288,7 +286,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
         try {
             // upgrading chat history
-            makingQuiz().then(async (rlt) => {
+            makingQuiz().then(async () => {
                 const response: any = await fetch(`${serverUrl}/chatbot/gradeEssay`, {
                     method: 'POST',
                     headers: {
@@ -305,11 +303,8 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                 // Check if the response is successful (status code 200)
                 if (response.status === 200) {
                     const reader = response.body.getReader();
-                    let receivedChunks = [];
 
-                    let answer = '';
-
-                    const read = async () => {
+                    const read = async (): Promise<void> => {
                         const { done, value } = await reader.read();
 
                         if (done) {
@@ -355,7 +350,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
                             });
 
                             let newStr = replacedString.replace(/[\[(]http[^\])]+[\])]/g, (match) => {
-                                let string = match.replace(/[\[\]()]/g, '')
+                                const string = match.replace(/[\[\]()]/g, '')
                                 return string
                             })
 
@@ -368,7 +363,6 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
 
                             text = newStr.replace(/```html|```/g, '')
                             // text = newStr.replace(/\n/g, '<br />');
-                            answer += text;
                             setAnswer(text)
                             // console.log('Received chunk:', text);
 
@@ -403,7 +397,7 @@ const Essay: FC<ChatbotProps> = ({ clearAnswer, setAnswer }) => {
     const handleClose = (
         event?: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
-    ) => {
+    ): void => {
         if (reason === 'clickaway') {
             return;
         }

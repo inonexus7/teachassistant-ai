@@ -6,7 +6,7 @@ import Button from "@mui/material/Button";
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
 import { ChatbotItem, ChatbotProps } from "@/interfaces/chatbot";
 import { serverUrl } from "@/config/development";
 import { useAuthContext } from "@/contexts/auth-context";
@@ -24,7 +24,7 @@ const LessonPlan: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
 
     const { makingQuiz } = auth;
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
         const { name, value } = e.target
 
         setData({
@@ -33,7 +33,7 @@ const LessonPlan: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
         })
     };
 
-    const handleChangeLang = (e: any) => {
+    const handleChangeLang = (e: any): void => {
         const { name, value } = e.target
 
         setData({
@@ -45,7 +45,7 @@ const LessonPlan: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
     const handleClose = (
         event?: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
-    ) => {
+    ): void => {
         if (reason === 'clickaway') {
             return;
         }
@@ -53,12 +53,12 @@ const LessonPlan: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
         setToast(false);
     }
 
-    const handleGenerate = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleGenerate = async (): Promise<boolean> => {
         if (Object.keys(data).length < 6) {
             return false;
         } else {
             clearAnswer()
-            makingQuiz().then(async (rlt) => {
+            makingQuiz().then(async () => {
                 console.log("ookkk")
                 try {
                     const response: any = await fetch(`${serverUrl}/chatbot/lessonplanner`, {
@@ -76,11 +76,8 @@ const LessonPlan: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
                     // Check if the response is successful (status code 200)
                     if (response.status === 200) {
                         const reader = response.body.getReader();
-                        let receivedChunks = [];
 
-                        let answer = '';
-
-                        const read = async () => {
+                        const read = async (): Promise<void> => {
                             const { done, value } = await reader.read();
 
                             if (done) {
@@ -126,7 +123,7 @@ const LessonPlan: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
                                 });
 
                                 let newStr = replacedString.replace(/[\[(]http[^\])]+[\])]/g, (match) => {
-                                    let string = match.replace(/[\[\]()]/g, '')
+                                    const string = match.replace(/[\[\]()]/g, '')
                                     return string
                                 })
 
@@ -140,7 +137,6 @@ const LessonPlan: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
                                 text = newStr.replace(/```html|```/g, '')
                                 // text = newStr.replace(/\n/g, '<br />');
                                 text = newStr.replace("<br/>", "")
-                                answer += text;
                                 setAnswer(text)
                                 // console.log('Received chunk:', text);
 
@@ -165,11 +161,12 @@ const LessonPlan: FC<ChatbotProps> = ({ setAnswer, clearAnswer }) => {
                     console.log('Error: ', error);
                     // Handle any network or other errors
                 }
-            }).catch(err => {
+            }).catch(() => {
                 setToast(true)
                 setMsg("You got some error!")
             })
         }
+        return true;
     }
 
     const bot: ChatbotItem = {

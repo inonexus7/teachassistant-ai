@@ -5,7 +5,7 @@ import { navigations } from './navigation.data'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useAuthContext } from '@/contexts/auth-context'
-import { Alert, Snackbar, SnackbarCloseReason, Link as MLink } from '@mui/material'
+import { Alert, Snackbar, SnackbarCloseReason } from '@mui/material'
 
 const Navigation: FC = () => {
   const [toast, setToast] = useState<boolean>(false);
@@ -20,7 +20,7 @@ const Navigation: FC = () => {
 
   const { isAuthenticated } = auth;
 
-  const handleGoHome = (e: any) => {
+  const handleGoHome = (e: any): void => {
     e.preventDefault()
     if (isAuthenticated) {
       router.push('/home')
@@ -33,7 +33,7 @@ const Navigation: FC = () => {
   const handleClose = (
     event?: React.SyntheticEvent | Event,
     reason?: SnackbarCloseReason,
-  ) => {
+  ): void => {
     if (reason === 'clickaway') {
       return;
     }
@@ -97,7 +97,7 @@ const Navigation: FC = () => {
             {label}
           </Box>
         }
-        return <Link key={`navigation_${destination}`} href={destination}>
+        return <Link key={`navigation_${destination}`} href={destination} passHref={true}>
           <Box
             component={ScrollLink}
             key={destination}
@@ -117,6 +117,7 @@ const Navigation: FC = () => {
               px: { xs: 0, md: 3 },
               mb: { xs: 3, md: 0 },
               fontSize: { xs: '1.2rem', md: 'inherit' },
+              textDecoration: 'none',
 
               '& > div': { display: 'none' },
 

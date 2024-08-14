@@ -11,12 +11,6 @@ interface Props {
 }
 const DetectDonutChart: FC<Props> = ({ data }) => {
 
-  useEffect(() => {
-    console.log('data: ', data);
-
-
-  }, [])
-
   const chartData = {
     labels: data.map((item: any) => item.label),
     datasets: [{

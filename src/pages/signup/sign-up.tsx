@@ -227,3 +227,5 @@ const SignUp: React.FC = () => {
         </ThemeProvider>
     );
 }
+
+export default SignUp

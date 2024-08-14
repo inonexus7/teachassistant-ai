@@ -16,7 +16,7 @@ const AuthNavigation: FC = () => {
 
   const { isAuthenticated, user, signOut } = auth;
 
-  const handleSignOut = () => {
+  const handleSignOut = (): void => {
     try {
       signOut();
       setToast(true)
@@ -28,7 +28,7 @@ const AuthNavigation: FC = () => {
   const handleClose = (
     event?: React.SyntheticEvent | Event,
     reason?: SnackbarCloseReason,
-  ) => {
+  ): void => {
     if (reason === 'clickaway') {
       return;
     }
@@ -39,12 +39,12 @@ const AuthNavigation: FC = () => {
   return (
     <Box sx={{ '& button:first-of-type': { mr: 2 } }}>
       {
-        !isAuthenticated ? <><Link href={`/signin`}>
+        !isAuthenticated ? <><Link href={`/signin`} passHref={true}>
           <StyledButton disableHoverEffect={true} variant="outlined">
             Sign In
           </StyledButton>
         </Link>
-          <Link href={`/signup`}>
+          <Link href={`/signup`} passHref={true}>
             <StyledButton disableHoverEffect={true}>Sign Up</StyledButton>
           </Link></> : <>
           <StyledButton disableHoverEffect={true} variant="outlined" onClick={handleSignOut}>
@@ -58,7 +58,7 @@ const AuthNavigation: FC = () => {
           severity="info"
           variant="filled"
           sx={{ width: '100%' }}>
-          You've logged out!.
+          {`You've logged out!.`}
         </Alert>
       </Snackbar>
     </Box>
