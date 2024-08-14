@@ -8,6 +8,7 @@ import { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
 import { styled } from '@mui/material/styles';
 import { ChatbotItem } from '../../interfaces/chatbot'
 import { useAuthContext } from '@/contexts/auth-context';
+import { useRouter } from 'next/router';
 
 const BootstrapTooltip = styled(({ className, ...props }: TooltipProps) => (
   <Tooltip {...props} arrow classes={{ popper: className }} />
@@ -24,17 +25,22 @@ const Home: FC = () => {
   const [chatbots, setChatbots] = useState<ChatbotItem[]>([])
   const [timerRefs, setTimerRefs] = useState<any>([]);
   const auth = useAuthContext()
+  const router = useRouter()
 
   if (!auth) {
     // process the context if the auth is null;
     throw new Error("Occured error to get context")
   }
 
-  const { bot, plan } = auth
+  const { bot, plan, isAuthenticated } = auth
 
   useEffect(() => {
     let delay = 200;
     const newTimerRefs: any = [];
+
+    if (!isAuthenticated) {
+      router.push('/')
+    }
 
     chatbots_items.forEach(item => {
       const timerId = setTimeout(() => {
@@ -50,6 +56,8 @@ const Home: FC = () => {
       timerRefs.forEach((timerId: any) => clearTimeout(timerId));
     };
   }, [])
+
+  if (!isAuthenticated) return null;
 
   return (
     <Grid container spacing={2}>

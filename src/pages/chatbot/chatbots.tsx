@@ -11,6 +11,7 @@ import { styled } from '@mui/material/styles';
 import { data } from '@/components/chatbot'
 import DetectDonutChart, { PlagDonutChart } from '@/components/Donut/DonutChart'
 import { useAuthContext } from '@/contexts/auth-context';
+import { useEffect } from 'react'
 
 const BootstrapTooltip = styled(({ className, ...props }: TooltipProps) => (
   <Tooltip {...props} arrow classes={{ popper: className }} />
@@ -38,7 +39,13 @@ const Chatbot: FC = () => {
     throw new Error("Occured error to get context")
   }
 
-  const { bot, plan } = auth
+  const { bot, plan, isAuthenticated } = auth
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/')
+    }
+  }, [router])
 
   let Bot: any = null
   let AIWritingDetectBot: any = null
@@ -86,6 +93,8 @@ const Chatbot: FC = () => {
     `).join('')
     return a + b
   }
+
+  if (!Bot || !isAuthenticated) return null
 
   return (
     <Grid container spacing={2}>

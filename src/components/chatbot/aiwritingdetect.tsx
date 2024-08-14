@@ -17,6 +17,10 @@ import PizZip from 'pizzip'
 import { serverUrl } from "@/config/development";
 import { useAuthContext } from "@/contexts/auth-context";
 import Image from "next/image";
+import { createWorker } from "tesseract.js";
+// @ts-ignore
+import * as pdfjsLib from "pdfjs-dist/build/pdf";
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -29,9 +33,6 @@ const VisuallyHiddenInput = styled('input')({
     whiteSpace: 'nowrap',
     width: 1,
 });
-
-const pdfjsLib: any = require('pdfjs-dist/webpack');
-const Tesseract: any = require('tesseract.js');
 
 function convertPdfToImagesAndReadText(file: File): any {
     return new Promise((resolve, reject) => {
@@ -72,12 +73,15 @@ function convertPdfToImagesAndReadText(file: File): any {
                     );
                 }
 
-                Promise.all(imagePromises).then(function (imageDataArray) {
+                Promise.all(imagePromises).then(async function (imageDataArray) {
                     const textPromises: any = [];
+                    const worker = await createWorker();
+
+                    await worker.load();
 
                     imageDataArray.forEach(function (imageData) {
                         textPromises.push(
-                            Tesseract.recognize(imageData, 'eng').then(function (result: any) {
+                            worker.recognize(imageData).then(function (result: any) {
                                 return result.data.text;
                             })
                         );

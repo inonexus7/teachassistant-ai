@@ -541,7 +541,7 @@ def upgradingPlan():
             line_items=[{
                 "price_data": {
                     "currency": "usd",
-                    "unit_amount": 999,
+                    "unit_amount": int(plan['price'] * 100),
                     "product_data": {
                         "name": plan['title']
                     }

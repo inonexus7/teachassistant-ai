@@ -1,15 +1,29 @@
+import { useAuthContext } from '@/contexts/auth-context'
 import { Box, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
 import React, { useEffect, FC } from 'react'
 
 const Failure: FC = () => {
     const router = useRouter()
+    const auth = useAuthContext()
+
+    if (!auth) {
+        throw new Error("auth error")
+    }
+
+    const { isAuthenticated } = auth;
 
     useEffect(() => {
+        if (!isAuthenticated) {
+            router.push('/')
+        }
+
         setTimeout(() => {
             router.push("/")
         }, 5000)
     })
+
+    if (!isAuthenticated) return null;
 
     return <Box sx={{ background: '#fff', width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
         <Box>
