@@ -602,7 +602,7 @@ def processWebhook():
             current = 0
             limit = 5
         
-        current_date = datetime.date.today()
+        current_date = datetime.date.today() + datetime.timedelta(days=30)
         chat_collection = db['chat']
         updated_plan = chat_collection.update_one({ "email": user_email }, { "$set": { "plan": plan['title'], "current": current, "limit": limit, 'lastUpdate': f"{current_date.year}-{current_date.month}-{current_date.day}" } })
         print(f"Server upgraded your plan with {plan['title']}")
@@ -610,6 +610,30 @@ def processWebhook():
         print("specific event: ", eType)
 
     return jsonify({ "received": True }), 200
+
+@app.route("/contact", methods=['POST'])
+def contactCtrl():
+    body = request.get_json()
+    email = body['email']
+    content = body['content']
+    fullname = body['fullname']
+
+    contact_collection = db['contact']
+    try:
+        now = datetime.datetime.now()
+
+        # Extract the year, month, day, hour, minute, and second
+        year = now.year
+        month = now.month
+        day = now.day
+        hour = now.hour
+        minute = now.minute
+        second = now.second
+        contact_collection.insert_one({ 'email': email, 'fullname': fullname, 'content': content, 'timestamp': f"{year}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}:{second:02d}" })
+        return jsonify({ "msg": "okay" }), 200
+    except Exception as ex:
+        print(ex)
+        return Response("server error!", status=500)
 
 if __name__ == '__main__':
     createWebhookEndpoints()

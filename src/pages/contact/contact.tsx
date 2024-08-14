@@ -3,6 +3,7 @@ import { MainLayout } from "@/components/layout";
 import { Alert, AlertColor, Box, Button, Grid, Snackbar, SnackbarCloseReason, TextField, Typography } from "@mui/material";
 import Paper from '@mui/material/Paper';
 import { useState } from 'react';
+import { axiosApi } from '@/config/development';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -21,7 +22,7 @@ const Contact = () => {
     const [toast, setToast] = useState(false)
     const [alert, setAlert] = useState<Notification>({ status: 'info', msg: '' })
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
 
@@ -38,7 +39,14 @@ const Contact = () => {
             return false;
         }
 
-        console.log(email, content, fullname)
+        try {
+            const result = await axiosApi.post("/contact", { email, fullname, content })
+            setToast(true)
+            setAlert({ status: 'success', msg: 'Thanks for your message!' })
+        } catch (err) {
+            setToast(true)
+            setAlert({ status: 'error', msg: 'Error! Please try it again.' })
+        }
     }
 
     const handleClose = (
