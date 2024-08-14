@@ -16,7 +16,11 @@ import { useAuthContext } from '@/contexts/auth-context';
 // import { useRouter } from 'next/router';
 import { Alert, Snackbar, SnackbarCloseReason } from '@mui/material';
 
-function Copyright(props: any) {
+interface CopyrightProp {
+    sx: any
+}
+
+const Copyright: React.FC<CopyrightProp> = (props) => {
     return (
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
             {'Copyright © '}
@@ -32,7 +36,7 @@ function Copyright(props: any) {
 // TODO remove, this demo shouldn't need to reset the theme.
 const defaultTheme = createTheme();
 
-export default function SignUp() {
+const SignUp: React.FC = () => {
     // const router = useRouter();
     const [toast, setToast] = useState<boolean>(false);
     const [msg, setMsg] = useState<string>("");
@@ -45,7 +49,7 @@ export default function SignUp() {
 
     const { signUp } = auth;
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>): boolean => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
 
@@ -67,17 +71,19 @@ export default function SignUp() {
             setToast(true)
             setMsg("Pls agree to the Terms & Conditions, Privacy Policy and Cookie Policy")
         }
+        return true;
     };
 
     const handleClose = (
         event?: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
-    ) => {
+    ): boolean => {
         if (reason === 'clickaway') {
-            return;
+            return false;
         }
 
         setToast(false);
+        return true;
     }
 
     return (

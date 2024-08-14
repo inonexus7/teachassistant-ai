@@ -49,31 +49,31 @@ const Chatbot: FC = () => {
     AIWritingDetectBot = data.find(item => item.id === bot_id.id)?.data as unknown as FC<AIWritingDetectChatbotProps>
   }
 
-  const clearAnswer = () => {
+  const clearAnswer = (): void => {
     setText('')
   }
 
-  const displayAnswer = (answer: string) => {
+  const displayAnswer = (answer: string): void => {
     setText(text => text.concat(answer))
   }
 
-  const setPlagFunc = (state: boolean) => {
+  const setPlagFunc = (state: boolean): void => {
     setPlag(state)
   }
 
-  const setDetectFunc = (state: boolean) => {
+  const setDetectFunc = (state: boolean): void => {
     setDetect(state)
   }
 
-  const setDetectAnswerFunc = (answer: any) => {
+  const setDetectAnswerFunc = (answer: any): void => {
     setDetectAnswer(answer)
   }
 
-  const setPlagAnswerFunc = (answer: any) => {
+  const setPlagAnswerFunc = (answer: any): void => {
     setPlagAnswer(answer)
   }
 
-  const renderPlagResult = (payload: any) => {
+  const renderPlagResult = (payload: any): string => {
     const a = `<h2>Average similarity: ${Math.floor(payload.plagia_score)}%</h2>`
     const b = payload.items.map((item: any) => `
       <h4>Plagiarism occurred in the following</h4>
@@ -156,11 +156,11 @@ const Chatbot: FC = () => {
                 }}
                 paddingX={{ xs: 2, sx: 2, md: 5 }}
               >
-                <Link href="/">
+                <Link href="/" passHref={true}>
                   <Typography className='custom_font' sx={{ cursor: 'pointer' }} fontSize={{ xs: 18, sx: 25, md: 30 }}>Teach Assist</Typography>
                 </Link>
                 <Box sx={{ width: '80%', display: 'flex', alignItems: 'center', justifyContent: 'end' }}>
-                  <Link href={`/home`}>
+                  <Link href={`/home`} passHref={true}>
                     <BootstrapTooltip title="Dashboard">
                       <IconButton style={{ padding: 0, marginLeft: 10 }} color="primary" aria-label="dashboard">
                         <Dashboard style={{ fontSize: 32 }} />

@@ -2,7 +2,7 @@ import { styled } from '@mui/material/styles';
 import { MainLayout } from "@/components/layout";
 import { Alert, AlertColor, Box, Button, Grid, Snackbar, SnackbarCloseReason, TextField, Typography } from "@mui/material";
 import Paper from '@mui/material/Paper';
-import { useState } from 'react';
+import { useState, FC } from 'react';
 import { axiosApi } from '@/config/development';
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -18,11 +18,11 @@ interface Notification {
     msg: string
 }
 
-const Contact = () => {
+const Contact: FC = () => {
     const [toast, setToast] = useState(false)
     const [alert, setAlert] = useState<Notification>({ status: 'info', msg: '' })
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<boolean> => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
 
@@ -40,24 +40,27 @@ const Contact = () => {
         }
 
         try {
-            const result = await axiosApi.post("/contact", { email, fullname, content })
+            await axiosApi.post("/contact", { email, fullname, content })
             setToast(true)
             setAlert({ status: 'success', msg: 'Thanks for your message!' })
+            return true;
         } catch (err) {
             setToast(true)
             setAlert({ status: 'error', msg: 'Error! Please try it again.' })
+            return false;
         }
     }
 
     const handleClose = (
         event?: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
-    ) => {
+    ): boolean => {
         if (reason === 'clickaway') {
-            return;
+            return false;
         }
 
         setToast(false);
+        return true;
     }
 
     return <MainLayout>
@@ -71,16 +74,16 @@ const Contact = () => {
                 <Grid item xs={12} md={6}>
                     <Item>
                         <Typography sx={{ fontSize: '2.1rem', fontWeight: 600, marginBottom: 3 }}>
-                            Got a question? Let's chat!
+                            {`Got a question? Let's chat!`}
                         </Typography>
                         <Typography sx={{ marginBottom: 3 }}>
-                            Our support team is here to help you with any questions or concerns you
+                            {`Our support team is here to help you with any questions or concerns you
                             may have, whether it's about using our tool, learning more about our plans
-                            or anything else.
+                            or anything else.`}
                         </Typography>
                         <Typography>
-                            Our support team will get back to you within 24 hours. We're excited to
-                            help you get the most out of Teach Assist AI.
+                            {`Our support team will get back to you within 24 hours. We're excited to
+                            help you get the most out of Teach Assist AI.`}
                         </Typography>
                     </Item>
                 </Grid>

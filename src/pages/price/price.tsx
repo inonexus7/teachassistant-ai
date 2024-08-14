@@ -2,7 +2,6 @@ import { MainLayout } from "@/components/layout";
 import { axiosApi } from "@/config/development";
 import { useAuthContext } from "@/contexts/auth-context";
 import { Alert, Box, Snackbar, SnackbarCloseReason, Typography } from "@mui/material";
-import { useRouter } from "next/router";
 import { FC, useEffect, useState } from "react";
 
 interface PlanType {
@@ -54,7 +53,6 @@ const Price: FC = () => {
     const [currentPlan, setCurrentPlan] = useState<number>(0);
     const [toast, setToast] = useState<boolean>(false);
     const [msg, setMsg] = useState<string>("");
-    const router = useRouter()
     const auth = useAuthContext()
 
     if (!auth) {
@@ -68,7 +66,7 @@ const Price: FC = () => {
         setCurrentPlan(current)
     }, [plan])
 
-    const handlePlan = async (plan: PlanType, idx: number) => {
+    const handlePlan = async (plan: PlanType, idx: number): Promise<boolean> => {
         if (currentPlan == idx) {
             // clicking current plan and skip it
             return false;
@@ -83,21 +81,24 @@ const Price: FC = () => {
             const rlt = await axiosApi.post("/upgradingPlan", { plan, email: user.email });
             const pay_url = rlt.data.payUrl;
             window.open(pay_url, '_blank');
+            return true;
         } catch (err) {
             setToast(true);
             setMsg("Error! You got some error during upgrading your plan.");
+            return false;
         }
     }
 
     const handleClose = (
         event?: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
-    ) => {
+    ): boolean => {
         if (reason === 'clickaway') {
-            return;
+            return false;
         }
 
         setToast(false);
+        return true;
     }
 
     return <MainLayout>
@@ -107,13 +108,13 @@ const Price: FC = () => {
             </Box>
             <Box sx={{ display: "flex", justifyContent: 'center' }} paddingX={{ xs: 5, sx: 5, md: 10, lg: 20 }} paddingY={10}>
                 <Typography color={`#394063`} fontSize={18}>
-                    Welcome to the pricing page for Teach Assist AI, a platform designed specifically for teachers and schools. Our plans are tailored to meet the unique needs of educators at every level, from individual teachers to entire educational institutions. Craft your teaching experience perfectly, analyze student performance effortlessly, and engage with your students authentically using our powerful AI technology.
+                    {`Welcome to the pricing page for Teach Assist AI, a platform designed specifically for teachers and schools. Our plans are tailored to meet the unique needs of educators at every level, from individual teachers to entire educational institutions. Craft your teaching experience perfectly, analyze student performance effortlessly, and engage with your students authentically using our powerful AI technology.`}
                     <br /><br />
-                    We offer a range of plans to accommodate different requirements and budgets. Whether you're a new teacher, an experienced educator, or a school administrator, we have the right plan for you. Additionally, if you have specific needs or require a custom plan, our team is here to collaborate with you and find the best solution.
+                    {`We offer a range of plans to accommodate different requirements and budgets. Whether you're a new teacher, an experienced educator, or a school administrator, we have the right plan for you. Additionally, if you have specific needs or require a custom plan, our team is here to collaborate with you and find the best solution.`}
                     <br /><br />
-                    We understand the importance of personalized support in the education sector. If you need any assistance or have questions regarding our plans, please do not hesitate to reach out to us. We're dedicated to helping teachers and schools succeed with Teach Assist AI.
+                    {`We understand the importance of personalized support in the education sector. If you need any assistance or have questions regarding our plans, please do not hesitate to reach out to us. We're dedicated to helping teachers and schools succeed with Teach Assist AI.`}
                     <br /><br />
-                    Curious about the price? We charge for our Full Access Plan to cover the expenses of providing our AI services. Our API enables us to utilize AI effectively in meeting your teaching requirements. By subscribing to the Full Access Plan, you not only gain unrestricted access to our cutting-edge teaching tools but also contribute to the enhancement of this exceptional service. Your support helps us sustain the API's cost, guaranteeing a reliable and efficient platform for educators. We appreciate your understanding and support as we empower teachers and enhance education with Teach Assist AI technology.
+                    {`Curious about the price? We charge for our Full Access Plan to cover the expenses of providing our AI services. Our API enables us to utilize AI effectively in meeting your teaching requirements. By subscribing to the Full Access Plan, you not only gain unrestricted access to our cutting-edge teaching tools but also contribute to the enhancement of this exceptional service. Your support helps us sustain the API's cost, guaranteeing a reliable and efficient platform for educators. We appreciate your understanding and support as we empower teachers and enhance education with Teach Assist AI technology.`}
                 </Typography>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginY: 4 }}>

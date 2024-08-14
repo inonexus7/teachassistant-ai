@@ -2,6 +2,7 @@ import { MainLayout } from "@/components/layout";
 import { Category, ChatbotItem } from "@/interfaces/chatbot";
 import { categories, chatbots_items } from "@/utils/chatbots-data";
 import { Box, Typography, Grid } from "@mui/material";
+import Image from "next/image";
 import { FC } from "react";
 
 const About: FC = () => {
@@ -13,9 +14,9 @@ const About: FC = () => {
                 <Typography sx={{ fontSize: '1.5rem', fontWeight: 400, marginTop: 5, textAlign: 'center' }}>Our AI teachers revolutionize the process of creating outstanding classroom materials, freeing you from the burden of extensive research and design. Simply provide the desired topic, and our app will generate a diverse range of resources, including lesson plans, activities, worksheets, and more. With AI teachers at your disposal, preparing engaging materials has never been easier.</Typography>
             </Box>
             {
-                categories.map((category: Category) => {
+                categories.map((category: Category, idx: number) => {
                     const filtered_bots: Array<ChatbotItem> = chatbots_items.filter((item: ChatbotItem) => item.category == category.title);
-                    return <Box sx={{ borderBottom: '2px solid #333', paddingY: 3 }}>
+                    return <Box key={`category_${idx}`} sx={{ borderBottom: '2px solid #333', paddingY: 3 }}>
                         <Typography sx={{ fontSize: '2.0rem', fontWeight: 600 }}>{category.title}</Typography>
                         <Typography sx={{ fontSize: '1.5rem', fontWeight: 400, marginY: 5 }}>{category.description}</Typography>
                         <Grid container sx={{ flexGrow: 1 }} spacing={5}>
@@ -23,7 +24,7 @@ const About: FC = () => {
                                 filtered_bots.map((item: ChatbotItem, index: number) => <Grid item key={`bot_${category.title}_${index}`} xs={12} sm={6} md={4}>
                                     <Box sx={{ background: '#fff', padding: 3, borderRadius: 5, boxShadow: '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)' }}>
                                         <Box sx={{ display: 'flex' }}>
-                                            <img src={item.cover} width={50} height={50} />
+                                            <Image src={item.cover} width={50} height={50} alt="bot_avatar_image" />
                                             <Box sx={{ marginLeft: 5 }}>
                                                 <Typography sx={{ fontWeight: 600, fontSize: '1.2rem' }}>{item.title}</Typography>
                                                 <Typography sx={{ fontSize: '1.2rem' }}>{item.admin}</Typography>

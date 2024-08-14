@@ -1,15 +1,15 @@
 import { Box, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
-import React, { useEffect } from 'react'
+import React, { useEffect, FC } from 'react'
 
-const Failure = () => {
+const Failure: FC = () => {
     const router = useRouter()
 
     useEffect(() => {
         setTimeout(() => {
             router.push("/")
         }, 5000)
-    }, [])
+    })
 
     return <Box sx={{ background: '#fff', width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
         <Box>
@@ -17,7 +17,7 @@ const Failure = () => {
         </Box>
         <Box sx={{ marginTop: 5 }}>
             <Typography sx={{ fontSize: '1.6rem', color: '#555' }}>
-                Don't worry. We will keep your plan and you can try to upgrade it.
+                {`Don't worry. We will keep your plan and you can try to upgrade it.`}
             </Typography>
         </Box>
         <Box sx={{ marginTop: 2 }}>

@@ -1,8 +1,9 @@
 import { MainLayout } from "@/components/layout";
 import { ExpandMore } from "@mui/icons-material";
 import { Accordion, AccordionDetails, AccordionSummary, Box } from "@mui/material";
+import { FC } from 'react'
 
-const FAQ = () => {
+const FAQ: FC = () => {
     return <MainLayout>
         <Box paddingX={{ xs: 10, md: 20 }} sx={{ marginBottom: 10 }}>
             <h1 style={{ textAlign: 'center', fontSize: '2.25rem', fontWeight: 800, color: 'blueviolet' }}>Frequently Asked Questions</h1>

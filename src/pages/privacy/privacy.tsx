@@ -1,5 +1,6 @@
 import { MainLayout } from "@/components/layout";
 import { Box } from "@mui/material";
+import { FC } from 'react'
 
 const data = [
     {
@@ -205,7 +206,7 @@ const data = [
     },
 ]
 
-const Privacy = () => {
+const Privacy: FC = () => {
     return <MainLayout>
         <h1 style={{ textAlign: 'center', fontSize: '2.25rem', fontWeight: 800, margin: '20px 0' }}>
             PRIVACY POLICY
@@ -217,7 +218,7 @@ const Privacy = () => {
         <Box marginX={{ xs: 5, md: 10 }} sx={{ paddingTop: 10 }}>
             {
                 data.map((el, i) => (
-                    <div style={{ marginBottom: 8 }}>
+                    <div key={`list_${i}`} style={{ marginBottom: 8 }}>
 
                         <h3 style={{ fontSize: '1.8rem', fontWeight: 600 }}>{el.title}</h3>
                         <p style={{ fontSize: '1.5rem', marginTop: 5, marginRight: 10 }}>

@@ -49,7 +49,7 @@ const Home: FC = () => {
     return () => {
       timerRefs.forEach((timerId: any) => clearTimeout(timerId));
     };
-  }, [])
+  })
 
   return (
     <Grid container spacing={2}>
@@ -120,7 +120,7 @@ const Home: FC = () => {
                 }}
                 paddingX={{ xs: 2, sx: 2, md: 5 }}
               >
-                <Link href="/">
+                <Link href="/" passHref={true}>
                   <Typography className='custom_font' sx={{ cursor: 'pointer' }} fontSize={{ xs: 18, sx: 25, md: 30 }}>Teach Assist</Typography>
                 </Link>
                 <Box sx={{ width: '80%', display: 'flex', alignItems: 'center', justifyContent: 'end' }}>

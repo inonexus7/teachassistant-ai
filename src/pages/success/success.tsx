@@ -1,17 +1,16 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Box, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
-import React, { useEffect } from 'react'
+import React, { useEffect, FC } from 'react'
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 
-const Success = () => {
+const Success: FC = () => {
     const router = useRouter()
 
     useEffect(() => {
         setTimeout(() => {
             router.push("/")
         }, 5000)
-    }, [])
+    })
 
     return <Box sx={{ background: '#fff', width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
         <Box>
@@ -22,7 +21,7 @@ const Success = () => {
         </Box>
         <Box sx={{ marginTop: 5 }}>
             <Typography sx={{ fontSize: '1.6rem', color: '#555' }}>
-                You've upgraded your plan. Take it mroe and hope to be helpful for you.
+                {`You've upgraded your plan. Take it mroe and hope to be helpful for you.`}
             </Typography>
         </Box>
         <Box sx={{ marginTop: 2 }}>
