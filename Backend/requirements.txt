@@ -5,7 +5,6 @@ google==3.0.0
 langchain
 nltk
 openai
-requests
 scikit-learn
 youtube-dl==2021.12.17
 youtube-transcript-api==0.6.1
@@ -14,14 +13,11 @@ selenium
 python-docx
 python-pptx
 Document
-SpeechRecognition
 pydub
 Spire.Presentation
 langchain_community
-moviepy
 python-dotenv
 PyJWT
 pyunsplash
-pytube
 pymongo
 stripe
