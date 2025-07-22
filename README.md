@@ -1,18 +1,12 @@
 <h1 align="center">
-  <a href="https://github.com/mpetrovic86119">
   TeachAssist - Nextjs Online Course Landing Page
-  </a>
   <br />
 </h1>
 
 ![screenshot](public/images/readme_preview.png)
 
-**Teachassist** is a free landing page template built on top of Material UI and fully coded in **React**.
+**Teachassist** is a free landing page template built on top of Material UI and fully coded in **Next.js** and **Python**.
 Simple & light is designed to provide all the basic components using the `sx` prop for a developer need to create landing page for Online Course product.
-
-## Live Demo
-
-Take a look the live demo here 👉 [https://coursespace.vercel.app/](https://coursespace.vercel.app/)
 
 ## Getting Started
 
